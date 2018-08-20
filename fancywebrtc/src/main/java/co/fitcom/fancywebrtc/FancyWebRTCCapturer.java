@@ -19,7 +19,7 @@ import org.webrtc.VideoTrack;
 import java.lang.ref.WeakReference;
 
 /**
- * Created by triniwiz on 8/15/18
+ * Created by Osei Fortune on 8/15/18
  */
 public class FancyWebRTCCapturer {
     private CameraVideoCapturer videoCapturer;
@@ -38,7 +38,6 @@ public class FancyWebRTCCapturer {
     }
 
     public void startVideo(Context context) {
-
         videoCapturer.initialize(SurfaceTextureHelper.create("fancyWebRTCVideoCapturer", FancyWebRTCEglUtils.getRootEglBaseContext()), context, videoSource.getCapturerObserver());
         videoCapturer.startCapture(format.width, format.height, format.framerate.max);
     }

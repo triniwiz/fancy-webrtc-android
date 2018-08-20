@@ -12,7 +12,7 @@ import org.webrtc.VideoSink;
 import org.webrtc.VideoTrack;
 
 /**
- * Created by triniwiz on 8/15/18
+ * Created by Osei Fortune on 8/15/18
  */
 public class FancyWebRTCView extends SurfaceViewRenderer {
     private VideoTrack track;

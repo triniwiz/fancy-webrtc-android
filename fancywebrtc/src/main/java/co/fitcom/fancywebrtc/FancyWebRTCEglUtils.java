@@ -3,7 +3,7 @@ package co.fitcom.fancywebrtc;
 import org.webrtc.EglBase;
 
 /**
- * Created by triniwiz on 8/15/18
+ * Created by Osei Fortune on 8/15/18
  */
 public class FancyWebRTCEglUtils {
     private static EglBase rootEglBase;

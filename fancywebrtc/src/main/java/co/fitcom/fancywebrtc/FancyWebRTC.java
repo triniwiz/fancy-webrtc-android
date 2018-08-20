@@ -50,7 +50,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Created by triniwiz on 8/15/18
+ * Created by Osei Fortune on 8/15/18
  */
 
 public class FancyWebRTC {
@@ -403,10 +403,10 @@ public class FancyWebRTC {
     }
 
     public void disconnect() {
-        if (connection == null) return;
         executor.execute(new Runnable() {
             @Override
             public void run() {
+                if (connection == null) return;
                 connection.close();
             }
         });
@@ -477,7 +477,6 @@ public class FancyWebRTC {
 
                     @Override
                     public void onSetSuccess() {
-                        Log.d("co.fitcom.fancywebrtc", "setRemoteDescription " + "onSetSuccess");
                     }
 
                     @Override
@@ -497,7 +496,6 @@ public class FancyWebRTC {
     }
 
     public void createAnswerForOfferReceived(SessionDescription remoteSdp, MediaConstraints constraints) {
-        Log.d(Tag,"createAnswerForOfferReceived " + "connection: " + connection + " remoteSdp: " +remoteSdp);
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -560,7 +558,7 @@ public class FancyWebRTC {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                if (connection.getRemoteDescription() != null) {
+                if (connection != null && connection.getRemoteDescription() != null) {
                     connection.addIceCandidate(iceCandidate);
                 } else {
                     remoteIceCandidates.add(iceCandidate);
@@ -706,12 +704,10 @@ public class FancyWebRTC {
                         new SdpObserver() {
                             @Override
                             public void onCreateSuccess(SessionDescription sessionDescription) {
-                                Log.d("co.fitcom.fancywebrtc", "handleSdpGenerated " + "onCreateSuccess");
                             }
 
                             @Override
                             public void onSetSuccess() {
-                                Log.d("co.fitcom.fancywebrtc", "handleSdpGenerated " + "onSetSuccess" + "type " + sdp.type);
                                 if (listener != null) {
                                     listener.webRTCClientStartCallWithSdp(ref.get(), sdp);
                                 }
