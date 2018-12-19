@@ -17,9 +17,6 @@ import org.webrtc.VideoTrack;
 public class FancyWebRTCView extends SurfaceViewRenderer {
     private VideoTrack track;
 
-    public FancyWebRTCView(Context context) {
-        super(context);
-    }
 
     public FancyWebRTCView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -27,8 +24,8 @@ public class FancyWebRTCView extends SurfaceViewRenderer {
     }
 
     private void initialize() {
-        init(FancyWebRTCEglUtils.getRootEglBaseContext(), null);
-        setEnableHardwareScaler(true);
+       init(FancyWebRTCEglUtils.getRootEglBaseContext(), null);
+       setEnableHardwareScaler(true);
     }
 
 

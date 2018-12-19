@@ -7,7 +7,6 @@ import android.support.v4.content.ContextCompat;
 
 import org.webrtc.CameraEnumerationAndroid;
 import org.webrtc.CameraVideoCapturer;
-import org.webrtc.CapturerObserver;
 import org.webrtc.MediaStream;
 import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.SurfaceViewRenderer;

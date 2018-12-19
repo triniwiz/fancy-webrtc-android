@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
             socket.on("call:incoming", new Emitter.Listener() {
                 @Override
-                public void call(Object... args) {
+                public void call(final Object... args) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
 
             socket.on("call:answer", new Emitter.Listener() {
                 @Override
-                public void call(Object... args) {
+                public void call(final Object... args) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
 
             socket.on("call:answered", new Emitter.Listener() {
                 @Override
-                public void call(Object... args) {
+                public void call(final Object... args) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {

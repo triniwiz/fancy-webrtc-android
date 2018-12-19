@@ -28,6 +28,7 @@ import org.webrtc.MediaStreamTrack;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.RtpReceiver;
+import org.webrtc.RtpTransceiver;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
 import org.webrtc.SoftwareVideoDecoderFactory;
@@ -313,6 +314,11 @@ public class FancyWebRTC {
                     @Override
                     public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
                     }
+
+                    @Override
+                    public void onTrack(RtpTransceiver rtpTransceiver) {
+
+                    }
                 });
             }
         });
@@ -412,7 +418,7 @@ public class FancyWebRTC {
         });
     }
 
-    public void dataChannelSend(String name, String data, DataChannelMessageType type) {
+    public void dataChannelSend(String name, final String data, final DataChannelMessageType type) {
         final DataChannel channel = dataChannels.get(name);
         executor.execute(new Runnable() {
             @Override
@@ -451,7 +457,7 @@ public class FancyWebRTC {
         });
     }
 
-    public void dataChannelCreate(String name) {
+    public void dataChannelCreate(final String name) {
         final DataChannel.Init initData = new DataChannel.Init();
         executor.execute(new Runnable() {
             @Override
@@ -463,7 +469,7 @@ public class FancyWebRTC {
         });
     }
 
-    public void handleAnswerReceived(SessionDescription sdp) {
+    public void handleAnswerReceived(final SessionDescription sdp) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -495,7 +501,7 @@ public class FancyWebRTC {
         });
     }
 
-    public void createAnswerForOfferReceived(SessionDescription remoteSdp, MediaConstraints constraints) {
+    public void createAnswerForOfferReceived(final SessionDescription remoteSdp, MediaConstraints constraints) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -554,7 +560,7 @@ public class FancyWebRTC {
 
     }
 
-    public void addIceCandidate(IceCandidate iceCandidate) {
+    public void addIceCandidate(final IceCandidate iceCandidate) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -575,7 +581,7 @@ public class FancyWebRTC {
         return remoteMediaStreams.get(id);
     }
 
-    public void addLocalStream(MediaStream stream) {
+    public void addLocalStream(final MediaStream stream) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -622,8 +628,8 @@ public class FancyWebRTC {
         });
     }
 
-    public void getUserMedia(Quality quality, FancyWebRTCListener.GetUserMediaListener getUserMediaListener) {
-        String streamId = randomId();
+    public void getUserMedia(final Quality quality, final FancyWebRTCListener.GetUserMediaListener getUserMediaListener) {
+       final String streamId = randomId();
         if (!FancyWebRTC.hasPermissions(appContext)) {
             boolean videoPermission = ContextCompat.checkSelfPermission(appContext, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
             boolean audioPermission = ContextCompat.checkSelfPermission(appContext, android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
@@ -693,7 +699,7 @@ public class FancyWebRTC {
         });
     }
 
-    private void handleSdpGenerated(SessionDescription sdp) {
+    private void handleSdpGenerated(final SessionDescription sdp) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
