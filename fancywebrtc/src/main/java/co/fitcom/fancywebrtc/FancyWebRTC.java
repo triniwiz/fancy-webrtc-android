@@ -237,6 +237,7 @@ public class FancyWebRTC {
         executor.execute(new Runnable() {
             @Override
             public void run() {
+
                 connection = factory.createPeerConnection(configuration, new PeerConnection.Observer() {
                     @Override
                     public void onSignalingChange(PeerConnection.SignalingState signalingState) {
