@@ -10,19 +10,19 @@ import org.webrtc.SessionDescription;
  */
 public class FancyRTCSessionDescription {
     private FancyRTCSdpType type;
-    private String sdp;
+    private String description;
 
-    public FancyRTCSessionDescription(FancyRTCSdpType type, String sdp) {
+    public FancyRTCSessionDescription(FancyRTCSdpType type, String description) {
         this.type = type;
-        this.sdp = sdp;
+        this.description = description;
     }
 
     public FancyRTCSdpType getType() {
         return type;
     }
 
-    public String getSdp() {
-        return sdp;
+    public String getDescription() {
+        return description;
     }
 
     public String toJSON() {
@@ -52,4 +52,18 @@ public class FancyRTCSessionDescription {
         }
         return new FancyRTCSessionDescription(type, sdp.description);
     }
+
+    public SessionDescription getSessionDescription() {
+        switch (this.type) {
+            case PRANSWER:
+                return new SessionDescription(SessionDescription.Type.PRANSWER, description);
+            case ANSWER:
+                return new SessionDescription(SessionDescription.Type.ANSWER, description);
+            case OFFER:
+                return new SessionDescription(SessionDescription.Type.OFFER, description);
+            default:
+                return null;
+        }
+    }
+
 }
