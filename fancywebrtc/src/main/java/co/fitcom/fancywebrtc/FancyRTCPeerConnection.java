@@ -263,7 +263,7 @@ public class FancyRTCPeerConnection {
 
     public void createDataChannel(String label, FancyRTCDataChannelInit init) {
         if (connection != null) {
-            connection.createDataChannel(label, init.getInit());
+            executor.execute(() -> connection.createDataChannel(label, init.getInit()));
         }
     }
 
