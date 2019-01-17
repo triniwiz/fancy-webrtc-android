@@ -2,6 +2,7 @@ package co.fitcom.fancywebrtc;
 
 import org.webrtc.AudioTrack;
 import org.webrtc.MediaStream;
+import org.webrtc.MediaStreamTrack;
 import org.webrtc.VideoTrack;
 
 import java.util.ArrayList;

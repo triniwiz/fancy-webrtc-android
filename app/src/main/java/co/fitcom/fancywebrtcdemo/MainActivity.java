@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
             IO.Options options = new IO.Options();
             options.forceNew = true;
             options.secure = false;
-            socket = IO.socket("http://192.168.1.115:3001", options);
+            socket = IO.socket("http://192.168.0.10:3001", options);
 
             socket.on("call:incoming", new Emitter.Listener() {
                 @Override
@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            socket.connect();
+            //socket.connect();
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }

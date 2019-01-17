@@ -5,10 +5,11 @@ import org.webrtc.AudioTrack;
 /**
  * Created by triniwiz on 1/16/19
  */
-public class FancyRTCAudioTrack {
+public class FancyRTCAudioTrack extends FancyRTCMediaStreamTrack {
     AudioTrack audioTrack;
 
     FancyRTCAudioTrack(AudioTrack track) {
+        super(track);
         audioTrack = track;
     }
 
