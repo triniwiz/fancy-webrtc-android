@@ -1,12 +1,14 @@
 package co.fitcom.fancywebrtc;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
 import org.webrtc.Camera1Enumerator;
 import org.webrtc.Camera2Enumerator;
+import org.webrtc.CameraEnumerationAndroid;
 import org.webrtc.CameraEnumerator;
 import org.webrtc.CameraVideoCapturer;
 import org.webrtc.MediaConstraints;
@@ -26,7 +28,7 @@ public class FancyRTCMediaDevices {
     static PeerConnectionFactory factory;
     private static final int DEFAULT_HEIGHT = 480;
     private static final int DEFAULT_WIDTH = 640;
-    private static final int DEFAULT_FPS = 25;
+    private static final int DEFAULT_FPS = 15;
 
     public static interface GetUserMediaListener {
         public void onSuccess(FancyRTCMediaStream mediaStream);
@@ -49,7 +51,19 @@ public class FancyRTCMediaDevices {
             }
 
             if (constraints.isAudioEnabled) {
-                AudioSource audioSource = factory.createAudioSource(new MediaConstraints());
+                MediaConstraints audioConstraints = new MediaConstraints();
+                audioConstraints.optional.add(
+                        new MediaConstraints.KeyValuePair("googNoiseSuppression", "true"));
+                audioConstraints.optional.add(
+                        new MediaConstraints.KeyValuePair("googEchoCancellation", "true"));
+                audioConstraints.optional.add(
+                        new MediaConstraints.KeyValuePair("echoCancellation", "true"));
+                audioConstraints.optional.add(
+                        new MediaConstraints.KeyValuePair("googEchoCancellation2", "true"));
+                audioConstraints.optional.add(
+                        new MediaConstraints.KeyValuePair(
+                                "googDAEchoCancellation", "true"));
+                AudioSource audioSource = factory.createAudioSource(audioConstraints);
                 String audioTrackId = FancyUtils.getUUID();
                 AudioTrack audioTrack = factory.createAudioTrack(audioTrackId, audioSource);
                 if (constraints.audioConstraints != null && constraints.audioConstraints.containsKey("volume")) {
@@ -60,7 +74,8 @@ public class FancyRTCMediaDevices {
             }
 
             CameraEnumerator enumerator;
-            if (Camera2Enumerator.isSupported(context)) {
+            Log.d("co.test", "Camera2Enumerator.isSupported " + Camera2Enumerator.isSupported(context) + " other check " + (Build.VERSION.SDK_INT >= 21));
+            if (Build.VERSION.SDK_INT >= 21) {
                 enumerator = new Camera2Enumerator(context);
             } else {
                 enumerator = new Camera1Enumerator(false);
@@ -131,7 +146,7 @@ public class FancyRTCMediaDevices {
                 }
             }
 
-            VideoCapturer capturer = enumerator.createCapturer(selectedDevice, new CameraVideoCapturer.CameraEventsHandler() {
+            CameraVideoCapturer capturer = enumerator.createCapturer(selectedDevice, new CameraVideoCapturer.CameraEventsHandler() {
                 @Override
                 public void onCameraError(String s) {
 
@@ -193,8 +208,19 @@ public class FancyRTCMediaDevices {
                 h = DEFAULT_HEIGHT;
             }
 
-            capturer.startCapture(w, h, f);
 
+            CameraEnumerationAndroid.CaptureFormat firstFormat = enumerator.getSupportedFormats(selectedDevice).get(0); // Highest format
+            if(h > firstFormat.height){
+                h = firstFormat.height;
+            }
+            if(w > firstFormat.width){
+                w = firstFormat.width;
+            }
+            if(f > firstFormat.framerate.max){
+                f = firstFormat.framerate.max;
+            }
+            capturer.startCapture(w, h, f);
+            videoSource.adaptOutputFormat(w, h, f);
             FancyRTCMediaStream fancyMediaStream = new FancyRTCMediaStream(localStream);
             listener.onSuccess(fancyMediaStream);
         });

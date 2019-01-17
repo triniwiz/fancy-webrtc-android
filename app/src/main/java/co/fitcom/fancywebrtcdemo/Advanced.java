@@ -1,5 +1,6 @@
 package co.fitcom.fancywebrtcdemo;
 
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -7,10 +8,7 @@ import android.view.View;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.webrtc.DataChannel;
-import org.webrtc.MediaConstraints;
-import org.webrtc.SdpObserver;
-import org.webrtc.SessionDescription;
+import org.webrtc.PeerConnectionFactory;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -47,13 +45,16 @@ public class Advanced extends AppCompatActivity {
     FancyRTCMediaStream localStream;
     private final Map<String, FancyRTCDataChannel> dataChannels = new HashMap<>();
     private ArrayList<FancyRTCIceCandidate> remoteIceCandidates;
-    static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private static String TAG = "co.fitcom.fancywebrtc.advanced";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_advanced);
+        PeerConnectionFactory.InitializationOptions.Builder builder = PeerConnectionFactory.InitializationOptions.builder(this);
+        builder.setEnableInternalTracer(true);
+        PeerConnectionFactory.initialize(builder.createInitializationOptions());
+        remoteIceCandidates = new ArrayList<>();
         me = UUID.randomUUID().toString();
         localView = findViewById(R.id.localView);
         localView.setMirror(true);
@@ -63,7 +64,7 @@ public class Advanced extends AppCompatActivity {
             IO.Options options = new IO.Options();
             options.forceNew = true;
             options.secure = false;
-            socket = IO.socket("http://192.168.1.115:3001", options);
+            socket = IO.socket("http://192.168.0.10:3001", options);
 
             socket.on("call:incoming", args -> runOnUiThread(() -> {
                 JSONObject object = (JSONObject) args[0];
@@ -168,11 +169,9 @@ public class Advanced extends AppCompatActivity {
 
         FancyRTCConfiguration configuration = new FancyRTCConfiguration();
         connection = new FancyRTCPeerConnection(configuration);
-        connection.setOnTrackListener(new FancyRTCPeerConnection.FancyOnTrackListener() {
-            @Override
-            public void onTrack() {
+        connection.setOnTrackListener(event -> {
+            connection.addTrack(event.getMediaTrack());
 
-            }
         });
         connection.setOnIceCandidateListener(candidate -> {
             JSONObject object = new JSONObject();
@@ -188,6 +187,14 @@ public class Advanced extends AppCompatActivity {
             }
             socket.emit("iceCandidate", object);
         });
+        if (FancyWebRTC.hasPermissions(this)) {
+            setUpUserMedia();
+        } else {
+            FancyWebRTC.requestPermissions(this);
+        }
+    }
+
+    public void setUpUserMedia() {
         FancyRTCMediaStreamConstraints constraints = new FancyRTCMediaStreamConstraints(true, true);
         FancyRTCMediaDevices.getUserMedia(this, constraints, new FancyRTCMediaDevices.GetUserMediaListener() {
             @Override
@@ -201,34 +208,31 @@ public class Advanced extends AppCompatActivity {
 
             }
         });
-
-
     }
 
     public void makeCall(View view) {
-        executor.execute(() -> {
-            if (connection != null) {
-                if (localStream != null) {
-                    for (FancyVideoTrack track : localStream.getVideoTracks()) {
-                        connection.addTrack(track);
-                    }
-                    for (FancyRTCAudioTrack track : localStream.getAudioTracks()) {
-                        connection.addTrack(track);
-                    }
+        Log.d(TAG, "makeCall " + connection);
+        if (connection != null) {
+            if (localStream != null) {
+                for (FancyVideoTrack track : localStream.getVideoTracks()) {
+                    connection.addTrack(track);
                 }
-                connection.createOffer(new FancyRTCMediaConstraints(), new FancyRTCPeerConnection.SdpCreateListener() {
-                    @Override
-                    public void onSuccess(FancyRTCSessionDescription description) {
-                        handleSdpGenerated(description);
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        didReceiveError(error);
-                    }
-                });
+                for (FancyRTCAudioTrack track : localStream.getAudioTracks()) {
+                    connection.addTrack(track);
+                }
             }
-        });
+            connection.createOffer(new FancyRTCMediaConstraints(), new FancyRTCPeerConnection.SdpCreateListener() {
+                @Override
+                public void onSuccess(FancyRTCSessionDescription description) {
+                    handleSdpGenerated(description);
+                }
+
+                @Override
+                public void onError(String error) {
+                    didReceiveError(error);
+                }
+            });
+        }
     }
 
     public void answerCall(View view) {
@@ -241,12 +245,10 @@ public class Advanced extends AppCompatActivity {
     }
 
     void handleRemoteDescriptionSet() {
-        executor.execute(() -> {
-            for (FancyRTCIceCandidate iceCandidate : remoteIceCandidates) {
-                connection.addIceCandidate(iceCandidate);
-            }
-            remoteIceCandidates.clear();
-        });
+        for (FancyRTCIceCandidate iceCandidate : remoteIceCandidates) {
+            connection.addIceCandidate(iceCandidate);
+        }
+        remoteIceCandidates.clear();
     }
 
     void startCall(FancyRTCSessionDescription sdp) {
@@ -274,87 +276,85 @@ public class Advanced extends AppCompatActivity {
     }
 
     void createAnswerForOfferReceived(final FancyRTCSessionDescription remoteSdp) {
-        executor.execute(() -> {
-            if (connection == null || remoteSdp == null) return;
-            if (connection.getRemoteDescription() != null && (connection.getRemoteDescription().getType() == FancyRTCSdpType.ANSWER && remoteSdp.getType() == FancyRTCSdpType.ANSWER))
-                return;
-            connection.setRemoteDescription(remoteSdp, new FancyRTCPeerConnection.SdpSetListener() {
-                @Override
-                public void onSuccess() {
-                    handleRemoteDescriptionSet();
-                    connection.createAnswer(new FancyRTCMediaConstraints(), new FancyRTCPeerConnection.SdpCreateListener() {
-                        @Override
-                        public void onSuccess(FancyRTCSessionDescription description) {
-                            handleSdpGenerated(description);
-                            startCall(description);
-                        }
-
-                        @Override
-                        public void onError(String error) {
-
-                        }
-                    });
-                }
-
-                @Override
-                public void onError(String error) {
-
-                }
-            });
-        });
-    }
-
-    void handleAnswerReceived(final FancyRTCSessionDescription sdp) {
-        executor.execute(() -> {
-            if (connection == null || sdp == null) return;
-            FancyRTCSessionDescription newSdp = new FancyRTCSessionDescription(FancyRTCSdpType.ANSWER, sdp.getDescription());
-            connection.setRemoteDescription(newSdp, new FancyRTCPeerConnection.SdpSetListener() {
-                @Override
-                public void onSuccess() {
-
-                }
-
-                @Override
-                public void onError(String error) {
-                    didReceiveError(error);
-                }
-            });
-        });
-    }
-
-    void handleSdpGenerated(final FancyRTCSessionDescription sdp) {
-        executor.execute(() -> {
-            if (connection == null) return;
-            if (connection.getLocalDescription() != null && (connection.getLocalDescription().getType() == FancyRTCSdpType.ANSWER && sdp.getType() == FancyRTCSdpType.ANSWER))
-                return;
-            connection.setLocalDescription(sdp, new FancyRTCPeerConnection.SdpSetListener() {
-                @Override
-                public void onSuccess() {
-                    startCall(sdp);
-                }
-
-                @Override
-                public void onError(String error) {
-                    didReceiveError(error);
-                }
-            });
-        });
-    }
-
-
-    public void dataChannelCreate(final String name) {
-        final FancyRTCDataChannelInit dataChannelInit = new FancyRTCDataChannelInit();
-        executor.execute(new Runnable() {
+        if (connection == null || remoteSdp == null) return;
+        if (connection.getRemoteDescription() != null && (connection.getRemoteDescription().getType() == FancyRTCSdpType.ANSWER && remoteSdp.getType() == FancyRTCSdpType.ANSWER))
+            return;
+        connection.setRemoteDescription(remoteSdp, new FancyRTCPeerConnection.SdpSetListener() {
             @Override
-            public void run() {
-                FancyRTCDataChannel channel = connection.createDataChannel(name, dataChannelInit);
-                dataChannels.put(name, channel);
-                // registerDataChannelObserver(name);
+            public void onSuccess() {
+                handleRemoteDescriptionSet();
+                connection.createAnswer(new FancyRTCMediaConstraints(), new FancyRTCPeerConnection.SdpCreateListener() {
+                    @Override
+                    public void onSuccess(FancyRTCSessionDescription description) {
+                        handleSdpGenerated(description);
+                        startCall(description);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+
             }
         });
     }
 
+    void handleAnswerReceived(final FancyRTCSessionDescription sdp) {
+        if (connection == null || sdp == null) return;
+        FancyRTCSessionDescription newSdp = new FancyRTCSessionDescription(FancyRTCSdpType.ANSWER, sdp.getDescription());
+        connection.setRemoteDescription(newSdp, new FancyRTCPeerConnection.SdpSetListener() {
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onError(String error) {
+                didReceiveError(error);
+            }
+        });
+    }
+
+    void handleSdpGenerated(final FancyRTCSessionDescription sdp) {
+        if (connection == null) return;
+        if (connection.getLocalDescription() != null && (connection.getLocalDescription().getType() == FancyRTCSdpType.ANSWER && sdp.getType() == FancyRTCSdpType.ANSWER))
+            return;
+        connection.setLocalDescription(sdp, new FancyRTCPeerConnection.SdpSetListener() {
+            @Override
+            public void onSuccess() {
+                startCall(sdp);
+            }
+
+            @Override
+            public void onError(String error) {
+                didReceiveError(error);
+            }
+        });
+    }
+
+    public void dataChannelCreate(final String name) {
+        final FancyRTCDataChannelInit dataChannelInit = new FancyRTCDataChannelInit();
+        FancyRTCDataChannel channel = connection.createDataChannel(name, dataChannelInit);
+        dataChannels.put(name, channel);
+        // registerDataChannelObserver(name);
+    }
+
     void didReceiveError(String error) {
         Log.e(TAG, error);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == FancyWebRTC.WEBRTC_PERMISSIONS_REQUEST_CODE) {
+            if (FancyWebRTC.hasPermissions(this)) {
+                setUpUserMedia();
+            }
+        }
     }
 }

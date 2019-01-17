@@ -1,15 +1,17 @@
 package co.fitcom.fancywebrtc;
 
+import org.webrtc.MediaStreamTrack;
 import org.webrtc.VideoTrack;
 
 /**
  * Created by triniwiz on 1/16/19
  */
-public class FancyVideoTrack {
+public class FancyVideoTrack extends FancyRTCMediaStreamTrack {
     VideoTrack videoTrack;
 
-    FancyVideoTrack(VideoTrack track) {
-        videoTrack = track;
+    public FancyVideoTrack(VideoTrack track) {
+        super(track);
+        this.videoTrack = track;
     }
 
     public void setEnabled(boolean enabled) {
