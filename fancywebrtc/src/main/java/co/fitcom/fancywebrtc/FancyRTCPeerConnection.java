@@ -1,13 +1,12 @@
 package co.fitcom.fancywebrtc;
 
-import android.net.sip.SipSession;
+import android.util.Log;
 
 import org.webrtc.DataChannel;
 import org.webrtc.DefaultVideoDecoderFactory;
 import org.webrtc.DefaultVideoEncoderFactory;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaStream;
-import org.webrtc.MediaStreamTrack;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.RtpReceiver;
@@ -30,23 +29,26 @@ import java.util.concurrent.Executors;
 public class FancyRTCPeerConnection {
     private FancyRTCConfiguration configuration;
     private PeerConnection connection;
-    private PeerConnectionFactory factory;
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+    static PeerConnectionFactory factory;
+    static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private FancyOnConnectionStateChangeListener onConnectionStateChangeListener;
     private FancyOnTrackListener onTrackListener;
     private FancyOnRemoveTrackListener onRemoveTrackListener;
     private FancyOnIceGatheringStateChangeListener onIceGatheringStateChangeListener;
     private FancyOnNegotiationNeededListener onNegotiationNeededListener;
     private FancyOnSignalingStateChangeListener onSignalingStateChangeListener;
-
-    public FancyRTCPeerConnection() {
-        configuration = new FancyRTCConfiguration();
+    private FancyOnIceCandidateListener onIceCandidateListener;
+    private FancyOnDataChannelListener onDataChannelListener;
+    private FancyOnAddStreamListener onAddStreamListener;
+    private FancyOnRemoveStreamListener onRemoveStreamListener;
+    private void init() {
         executor.execute(() -> {
             PeerConnectionFactory.Builder builder = PeerConnectionFactory.builder();
             PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
             builder.setOptions(options);
             VideoEncoderFactory encoderFactory;
             VideoDecoderFactory decoderFactory;
+            Log.d("co.test", " " + FancyWebRTCEglUtils.getRootEglBaseContext());
             if (FancyWebRTCEglUtils.getRootEglBaseContext() != null) {
                 encoderFactory = new DefaultVideoEncoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext(), false, false);
                 decoderFactory = new DefaultVideoDecoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext());
@@ -57,8 +59,8 @@ public class FancyRTCPeerConnection {
 
             builder.setVideoDecoderFactory(decoderFactory);
             builder.setVideoEncoderFactory(encoderFactory);
-
             factory = builder.createPeerConnectionFactory();
+            FancyRTCMediaDevices.factory = factory;
             connection = factory.createPeerConnection(configuration.getConfiguration(), new PeerConnection.Observer() {
                 @Override
                 public void onSignalingChange(PeerConnection.SignalingState signalingState) {
@@ -84,6 +86,9 @@ public class FancyRTCPeerConnection {
 
                 @Override
                 public void onIceCandidate(IceCandidate iceCandidate) {
+                    if (onIceCandidateListener != null) {
+                        onIceCandidateListener.onIceCandidate(new FancyRTCIceCandidate(iceCandidate));
+                    }
                 }
 
                 @Override
@@ -93,17 +98,23 @@ public class FancyRTCPeerConnection {
 
                 @Override
                 public void onAddStream(MediaStream mediaStream) {
-
+                    if(onAddStreamListener != null){
+                        onAddStreamListener.onAddStream(new FancyRTCMediaStream(mediaStream));
+                    }
                 }
 
                 @Override
                 public void onRemoveStream(MediaStream mediaStream) {
-
+                    if(onRemoveStreamListener != null){
+                        onRemoveStreamListener.onRemoveStream(new FancyRTCMediaStream(mediaStream));
+                    }
                 }
 
                 @Override
                 public void onDataChannel(DataChannel dataChannel) {
-
+                    if (onDataChannelListener != null) {
+                        onDataChannelListener.onDataChannel(new FancyRTCDataChannelEvent(new FancyRTCDataChannel(dataChannel)));
+                    }
                 }
 
                 @Override
@@ -115,7 +126,7 @@ public class FancyRTCPeerConnection {
 
                 @Override
                 public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
-
+                    //TODO
                 }
 
                 @Override
@@ -126,11 +137,17 @@ public class FancyRTCPeerConnection {
         });
     }
 
-    public FancyRTCPeerConnection(FancyRTCConfiguration configuration) {
-        this.configuration = configuration;
+    public FancyRTCPeerConnection() {
+        configuration = new FancyRTCConfiguration();
+        init();
     }
 
-    public FancyRTCSessionDescription geLocalDescription() {
+    public FancyRTCPeerConnection(FancyRTCConfiguration configuration) {
+        this.configuration = configuration;
+        init();
+    }
+
+    public FancyRTCSessionDescription getLocalDescription() {
         if (connection != null) {
             return FancyRTCSessionDescription.fromRTCSessionDescription(connection.getLocalDescription());
         }
@@ -175,7 +192,7 @@ public class FancyRTCPeerConnection {
     }
 
     public static interface FancyOnTrackListener {
-        public void onTrack();
+        public void onTrack(FancyRTCTrackEvent event);
     }
 
     public void setOnTrackListener(FancyOnTrackListener listener) {
@@ -190,8 +207,24 @@ public class FancyRTCPeerConnection {
         onRemoveTrackListener = listener;
     }
 
+    public static interface FancyOnRemoveStreamListener {
+        public void onRemoveStream(FancyRTCMediaStream stream);
+    }
+
+    public void setOnRemoveStreamListener(FancyOnRemoveStreamListener listener) {
+        onRemoveStreamListener = listener;
+    }
+
     public static interface FancyOnIceGatheringStateChangeListener {
         public void onIceGatheringStateChange();
+    }
+
+    public static interface FancyOnAddStreamListener {
+        public void onAddStream(FancyRTCMediaStream stream);
+    }
+
+    public void setOnRemoveStreamListener(FancyOnAddStreamListener listener) {
+        onAddStreamListener = listener;
     }
 
     public void setOnIceGatheringStateChangeListener(FancyOnIceGatheringStateChangeListener listener) {
@@ -212,6 +245,22 @@ public class FancyRTCPeerConnection {
 
     public void setOnSignalingStateChangeListener(FancyOnSignalingStateChangeListener listener) {
         onSignalingStateChangeListener = listener;
+    }
+
+    public static interface FancyOnIceCandidateListener {
+        public void onIceCandidate(FancyRTCIceCandidate candidate);
+    }
+
+    public void setOnIceCandidateListener(FancyOnIceCandidateListener listener) {
+        onIceCandidateListener = listener;
+    }
+
+    public static interface FancyOnDataChannelListener {
+        public void onDataChannel(FancyRTCDataChannelEvent event);
+    }
+
+    public void setOnDataChannelListener(FancyOnDataChannelListener listener) {
+        onDataChannelListener = listener;
     }
 
     public List<FancyRTCIceServer> getDefaultIceServers() {
@@ -235,11 +284,15 @@ public class FancyRTCPeerConnection {
         }
     }
 
-    public void addTrack() {
+    public void addTrack(FancyVideoTrack track) {
         if (connection != null) {
-            // TODO
-            // executor.execute(() -> connection.addTrack(null, null));
+            executor.execute(() -> connection.addTrack(track.getVideoTrack()));
+        }
+    }
 
+    public void addTrack(FancyRTCAudioTrack track) {
+        if (connection != null) {
+            executor.execute(() -> connection.addTrack(track.getAudioTrack()));
         }
     }
 
@@ -261,13 +314,21 @@ public class FancyRTCPeerConnection {
         public void onError(String error);
     }
 
-    public void createDataChannel(String label, FancyRTCDataChannelInit init) {
+    public FancyRTCDataChannel createDataChannel(String label, FancyRTCDataChannelInit init) {
         if (connection != null) {
-            executor.execute(() -> connection.createDataChannel(label, init.getInit()));
+            DataChannel channel = connection.createDataChannel(label, init.getInit());
+            return new FancyRTCDataChannel(channel);
+        }
+        return null;
+    }
+
+    public void dispose() {
+        if (connection != null) {
+            executor.execute(() -> connection.dispose());
         }
     }
 
-    public void createAnswer(FancyMediaConstraints mediaConstraints, SdpCreateListener listener) {
+    public void createAnswer(FancyRTCMediaConstraints mediaConstraints, SdpCreateListener listener) {
         if (connection != null) {
             executor.execute(() -> connection.createAnswer(new SdpObserver() {
                 @Override
@@ -293,7 +354,7 @@ public class FancyRTCPeerConnection {
         }
     }
 
-    public void createOffer(FancyMediaConstraints mediaConstraints, SdpCreateListener listener) {
+    public void createOffer(FancyRTCMediaConstraints mediaConstraints, SdpCreateListener listener) {
         if (connection != null) {
             executor.execute(() -> connection.createOffer(new SdpObserver() {
                 @Override

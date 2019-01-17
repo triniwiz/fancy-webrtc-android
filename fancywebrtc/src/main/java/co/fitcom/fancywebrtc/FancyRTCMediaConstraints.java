@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by triniwiz on 1/8/19
  */
-public class FancyMediaConstraints {
+public class FancyRTCMediaConstraints {
 
     public static class KeyValue {
         private String key;
@@ -25,7 +25,7 @@ public class FancyMediaConstraints {
     public final List<KeyValue> mandatory = new ArrayList<>();
     public final List<KeyValue> optional = new ArrayList<>();
 
-    public FancyMediaConstraints() { }
+    public FancyRTCMediaConstraints() { }
 
     public String toJSON(){
         Gson gson = new Gson();

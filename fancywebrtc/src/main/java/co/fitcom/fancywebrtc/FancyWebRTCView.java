@@ -2,13 +2,9 @@ package co.fitcom.fancywebrtc;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 
-import org.webrtc.EglBase;
-import org.webrtc.RendererCommon;
+import org.webrtc.MediaStream;
 import org.webrtc.SurfaceViewRenderer;
-import org.webrtc.VideoFrame;
-import org.webrtc.VideoSink;
 import org.webrtc.VideoTrack;
 
 /**
@@ -16,7 +12,7 @@ import org.webrtc.VideoTrack;
  */
 public class FancyWebRTCView extends SurfaceViewRenderer {
     private VideoTrack track;
-
+    private FancyRTCMediaStream stream;
 
     public FancyWebRTCView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -24,10 +20,9 @@ public class FancyWebRTCView extends SurfaceViewRenderer {
     }
 
     private void initialize() {
-       init(FancyWebRTCEglUtils.getRootEglBaseContext(), null);
-       setEnableHardwareScaler(true);
+        init(FancyWebRTCEglUtils.getRootEglBaseContext(), null);
+        setEnableHardwareScaler(true);
     }
-
 
     @Override
     public void setMirror(boolean mirror) {
@@ -40,5 +35,20 @@ public class FancyWebRTCView extends SurfaceViewRenderer {
         }
         this.track = track;
         track.addSink(this);
+    }
+
+    public void setSrcObject(FancyRTCMediaStream stream) {
+        this.stream = stream;
+        if (this.stream != null) {
+            MediaStream mediaStream = this.stream.getStream();
+            if (mediaStream.videoTracks.size() > 0) {
+                VideoTrack track = mediaStream.videoTracks.get(0);
+                if (this.track != null) {
+                    this.track.dispose();
+                }
+                this.track = track;
+                track.addSink(this);
+            }
+        }
     }
 }
