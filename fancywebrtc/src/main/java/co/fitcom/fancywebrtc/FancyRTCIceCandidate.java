@@ -14,12 +14,29 @@ public class FancyRTCIceCandidate {
     private String usernameFragment;
     private String serverUrl;
     private IceCandidate iceCandidate;
+
     public FancyRTCIceCandidate() {
         candidate = "";
         sdpMid = "";
         sdpMLineIndex = 0;
         usernameFragment = "";
         serverUrl = "";
+    }
+
+    public FancyRTCIceCandidate(String sdp, String sdpMid, int sdpMLineIndex) {
+        candidate = sdp;
+        this.sdpMid = sdpMid;
+        this.sdpMLineIndex = sdpMLineIndex;
+        usernameFragment = "";
+        serverUrl = "";
+    }
+
+    FancyRTCIceCandidate(IceCandidate candidate) {
+        this.candidate = candidate.sdp;
+        this.sdpMid = candidate.sdpMid;
+        this.sdpMLineIndex = candidate.sdpMLineIndex;
+        usernameFragment = "";
+        serverUrl = candidate.serverUrl;
     }
 
     public String getCandidate() {
@@ -60,6 +77,10 @@ public class FancyRTCIceCandidate {
 
     public String getUsernameFragment() {
         return usernameFragment;
+    }
+
+    public String getServerUrl() {
+        return serverUrl;
     }
 
     public String toJSON(){

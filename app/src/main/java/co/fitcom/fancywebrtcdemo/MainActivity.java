@@ -1,5 +1,6 @@
 package co.fitcom.fancywebrtcdemo;
 
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -290,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-        webRTC.getUserMedia(FancyWebRTC.Quality.HIGHEST, new FancyWebRTCListener.GetUserMediaListener() {
+      /*  webRTC.getUserMedia(FancyWebRTC.Quality.HIGHEST, new FancyWebRTCListener.GetUserMediaListener() {
             @Override
             public void webRTCClientOnGetUserMedia(FancyWebRTC client, MediaStream stream) {
                 localStream = stream;
@@ -306,9 +307,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
         webRTC.connect();
+        */
     }
 
-    public void requestPermissions(){
+    public void goToAdvanced(View view) {
+        Intent intent = new Intent(this, Advanced.class);
+        webRTC.disconnect();
+        startActivity(intent);
+    }
+
+    public void requestPermissions() {
 
     }
 
@@ -341,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void webRTCClientOnGetUserMedia(FancyWebRTC client, MediaStream stream) {
                         localStream = stream;
-                        if(localStream != null){
+                        if (localStream != null) {
                             localStream.videoTracks.get(0).addSink(localView);
                         }
                     }

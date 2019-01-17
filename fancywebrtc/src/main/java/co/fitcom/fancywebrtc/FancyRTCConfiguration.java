@@ -17,7 +17,7 @@ public class FancyRTCConfiguration {
     private FancyRTCRtcpMuxPolicy rtcpMuxPolicy;
     private PeerConnection.RTCConfiguration configuration;
 
-    FancyRTCConfiguration() {
+    public FancyRTCConfiguration() {
         iceServers = new ArrayList<>();
         String[] defaultIceServers = new String[]{
                 "stun:stun.l.google.com:19302",
@@ -75,7 +75,7 @@ public class FancyRTCConfiguration {
         }
     }
 
-    FancyRTCConfiguration(List<FancyRTCIceServer> iceServers) {
+    public FancyRTCConfiguration(List<FancyRTCIceServer> iceServers) {
         this.iceServers = iceServers;
         List<PeerConnection.IceServer> list = new ArrayList<>();
         for (FancyRTCIceServer server : iceServers) {

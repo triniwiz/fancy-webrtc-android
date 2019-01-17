@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".Advanced">
 
     <co.fitcom.fancywebrtc.FancyWebRTCView
         android:id="@+id/localView"
@@ -96,14 +96,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.601" />
-
-    <Button
-        android:id="@+id/button5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="goToAdvanced"
-        android:text="Advanced"
-        tools:layout_editor_absoluteX="148dp"
-        tools:layout_editor_absoluteY="215dp" />
 
 </android.support.constraint.ConstraintLayout>

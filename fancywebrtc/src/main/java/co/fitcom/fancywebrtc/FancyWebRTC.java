@@ -126,6 +126,7 @@ public class FancyWebRTC {
 
                 factory = builder.createPeerConnectionFactory();
 
+
                 remoteIceCandidates = new ArrayList<>();
                 localMediaStreams = new HashMap<>();
                 remoteMediaStreams = new HashMap<>();
@@ -414,7 +415,11 @@ public class FancyWebRTC {
             @Override
             public void run() {
                 if (connection == null) return;
+                for(MediaStream stream: localMediaStreams.values()){
+                    stream.dispose();
+                }
                 connection.close();
+                connection.dispose();
             }
         });
     }
@@ -558,7 +563,6 @@ public class FancyWebRTC {
                 }, remoteSdp);
             }
         });
-
     }
 
     public void addIceCandidate(final IceCandidate iceCandidate) {
@@ -670,6 +674,7 @@ public class FancyWebRTC {
                 stream.addTrack(videoTrack);
 
                 AudioSource audioSource = factory.createAudioSource(new MediaConstraints());
+
                 String audioTrackId = randomId();
                 AudioTrack audioTrack = factory.createAudioTrack(audioTrackId, audioSource);
                 if (audioEnabled && (ContextCompat.checkSelfPermission(appContext, android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)) {
