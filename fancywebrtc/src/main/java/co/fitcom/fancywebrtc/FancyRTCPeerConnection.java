@@ -1,14 +1,19 @@
 package co.fitcom.fancywebrtc;
 
+import android.content.Context;
 import android.util.Log;
 
+import org.webrtc.AudioDecoderFactoryFactory;
 import org.webrtc.DataChannel;
 import org.webrtc.DefaultVideoDecoderFactory;
 import org.webrtc.DefaultVideoEncoderFactory;
+import org.webrtc.EglBase;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
+import org.webrtc.RTCStatsCollectorCallback;
+import org.webrtc.RTCStatsReport;
 import org.webrtc.RtpReceiver;
 import org.webrtc.RtpTransceiver;
 import org.webrtc.SdpObserver;
@@ -17,11 +22,16 @@ import org.webrtc.SoftwareVideoDecoderFactory;
 import org.webrtc.SoftwareVideoEncoderFactory;
 import org.webrtc.VideoDecoderFactory;
 import org.webrtc.VideoEncoderFactory;
+import org.webrtc.audio.AudioDeviceModule;
+import org.webrtc.audio.JavaAudioDeviceModule;
+import org.webrtc.audio.LegacyAudioDeviceModule;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by triniwiz on 1/7/19
@@ -30,6 +40,7 @@ public class FancyRTCPeerConnection {
     private FancyRTCConfiguration configuration;
     private PeerConnection connection;
     static PeerConnectionFactory factory;
+    private Context context;
     static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private FancyOnConnectionStateChangeListener onConnectionStateChangeListener;
     private FancyOnTrackListener onTrackListener;
@@ -41,20 +52,17 @@ public class FancyRTCPeerConnection {
     private FancyOnDataChannelListener onDataChannelListener;
     private FancyOnAddStreamListener onAddStreamListener;
     private FancyOnRemoveStreamListener onRemoveStreamListener;
+    VideoEncoderFactory encoderFactory;
+    VideoDecoderFactory decoderFactory;
 
     private void init() {
         executor.execute(() -> {
-
             PeerConnectionFactory.Builder builder = PeerConnectionFactory.builder();
             PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
             builder.setOptions(options);
-            VideoEncoderFactory encoderFactory;
-            VideoDecoderFactory decoderFactory;
-            Log.d("co.test", " " + FancyWebRTCEglUtils.getRootEglBaseContext());
             if (FancyWebRTCEglUtils.getRootEglBaseContext() != null) {
-                Log.d("co.test", "has decoder and encoder");
-                encoderFactory = new DefaultVideoEncoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext(), false, false);
-                decoderFactory = new DefaultVideoDecoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext());
+               encoderFactory = new DefaultVideoEncoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext(), true, false);
+               decoderFactory = new DefaultVideoDecoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext());
             } else {
                 encoderFactory = new SoftwareVideoEncoderFactory();
                 decoderFactory = new SoftwareVideoDecoderFactory();
@@ -64,11 +72,12 @@ public class FancyRTCPeerConnection {
             builder.setVideoEncoderFactory(encoderFactory);
             factory = builder.createPeerConnectionFactory();
             FancyRTCMediaDevices.factory = factory;
-
             connection = factory.createPeerConnection(configuration.getConfiguration(), new PeerConnection.Observer() {
                 @Override
                 public void onSignalingChange(PeerConnection.SignalingState signalingState) {
-
+                    if(onSignalingStateChangeListener != null){
+                        onSignalingStateChangeListener.onSignalingStateChange();
+                    }
                 }
 
                 @Override
@@ -80,12 +89,13 @@ public class FancyRTCPeerConnection {
 
                 @Override
                 public void onIceConnectionReceivingChange(boolean b) {
-
                 }
 
                 @Override
                 public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
-
+                    if(onIceGatheringStateChangeListener != null){
+                        onIceGatheringStateChangeListener.onIceGatheringStateChange();
+                    }
                 }
 
                 @Override
@@ -135,6 +145,7 @@ public class FancyRTCPeerConnection {
                         for (MediaStream stream : mediaStreams) {
                             list.add(new FancyRTCMediaStream(stream));
                         }
+
                         /*
                         RtpTransceiver rtpTransceiver = null;
                         for (RtpTransceiver transceiver : connection.getTransceivers()) {
@@ -152,15 +163,23 @@ public class FancyRTCPeerConnection {
 
                 }
             });
+            connection.getStats(new RTCStatsCollectorCallback() {
+                @Override
+                public void onStatsDelivered(RTCStatsReport rtcStatsReport) {
+
+                }
+            });
         });
     }
 
-    public FancyRTCPeerConnection() {
+    public FancyRTCPeerConnection(Context context) {
+        this.context = context;
         configuration = new FancyRTCConfiguration();
         init();
     }
 
-    public FancyRTCPeerConnection(FancyRTCConfiguration configuration) {
+    public FancyRTCPeerConnection(Context context , FancyRTCConfiguration configuration) {
+        this.context = context;
         this.configuration = configuration;
         init();
     }
@@ -304,7 +323,6 @@ public class FancyRTCPeerConnection {
 
     public void addTrack(FancyRTCMediaStreamTrack track) {
         if (connection != null) {
-            Log.d("co.test", "addTrack" + track.getMediaStreamTrack() + " kind " + track.getKind());
             executor.execute(() -> connection.addTrack(track.getMediaStreamTrack()));
         }
     }
@@ -372,8 +390,7 @@ public class FancyRTCPeerConnection {
             executor.execute(() -> connection.createOffer(new SdpObserver() {
                 @Override
                 public void onCreateSuccess(SessionDescription sessionDescription) {
-                    Log.d("co.test", "createoffer sdp" + sessionDescription);
-                    listener.onSuccess(FancyRTCSessionDescription.fromRTCSessionDescription(sessionDescription));
+                   listener.onSuccess(FancyRTCSessionDescription.fromRTCSessionDescription(sessionDescription));
                 }
 
                 @Override
@@ -388,36 +405,37 @@ public class FancyRTCPeerConnection {
 
                 @Override
                 public void onSetFailure(String s) {
-
                 }
             }, mediaConstraints.getMediaConstraints()));
         }
     }
 
     public void setLocalDescription(FancyRTCSessionDescription sdp, SdpSetListener listener) {
-        if (connection != null) {
-            executor.execute(() -> connection.setLocalDescription(new SdpObserver() {
-                @Override
-                public void onCreateSuccess(SessionDescription sessionDescription) {
+        executor.execute(() -> {
+            if (connection != null) {
+                connection.setLocalDescription(new SdpObserver() {
+                    @Override
+                    public void onCreateSuccess(SessionDescription sessionDescription) {
 
-                }
+                    }
 
-                @Override
-                public void onSetSuccess() {
-                    listener.onSuccess();
-                }
+                    @Override
+                    public void onSetSuccess() {
+                       listener.onSuccess();
+                    }
 
-                @Override
-                public void onCreateFailure(String s) {
+                    @Override
+                    public void onCreateFailure(String s) {
 
-                }
+                    }
 
-                @Override
-                public void onSetFailure(String s) {
-                    listener.onError(s);
-                }
-            }, sdp.getSessionDescription()));
-        }
+                    @Override
+                    public void onSetFailure(String s) {
+                        listener.onError(s);
+                    }
+                }, sdp.getSessionDescription());
+            }
+        });
     }
 
     public void setRemoteDescription(FancyRTCSessionDescription sdp, SdpSetListener listener) {
@@ -449,4 +467,54 @@ public class FancyRTCPeerConnection {
     public PeerConnection getConnection() {
         return connection;
     }
+
+
+    AudioDeviceModule createLegacyAudioDevice() {
+        return new LegacyAudioDeviceModule();
+    }
+    AudioDeviceModule createJavaAudioDevice() {
+        return JavaAudioDeviceModule.builder(context)
+                .setSamplesReadyCallback(new JavaAudioDeviceModule.SamplesReadyCallback() {
+                    @Override
+                    public void onWebRtcAudioRecordSamplesReady(JavaAudioDeviceModule.AudioSamples audioSamples) {
+
+                    }
+                })
+                .setUseHardwareAcousticEchoCanceler(true)
+                .setUseHardwareNoiseSuppressor(true)
+                .setAudioRecordErrorCallback(new JavaAudioDeviceModule.AudioRecordErrorCallback() {
+                    @Override
+                    public void onWebRtcAudioRecordInitError(String s) {
+
+                    }
+
+                    @Override
+                    public void onWebRtcAudioRecordStartError(JavaAudioDeviceModule.AudioRecordStartErrorCode audioRecordStartErrorCode, String s) {
+
+                    }
+
+                    @Override
+                    public void onWebRtcAudioRecordError(String s) {
+
+                    }
+                })
+                .setAudioTrackErrorCallback(new JavaAudioDeviceModule.AudioTrackErrorCallback() {
+                    @Override
+                    public void onWebRtcAudioTrackInitError(String s) {
+
+                    }
+
+                    @Override
+                    public void onWebRtcAudioTrackStartError(JavaAudioDeviceModule.AudioTrackStartErrorCode audioTrackStartErrorCode, String s) {
+
+                    }
+
+                    @Override
+                    public void onWebRtcAudioTrackError(String s) {
+
+                    }
+                })
+                .createAudioDeviceModule();
+    }
+
 }

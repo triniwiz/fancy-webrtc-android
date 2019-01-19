@@ -29,6 +29,7 @@ public class FancyRTCIceCandidate {
         this.sdpMLineIndex = sdpMLineIndex;
         usernameFragment = "";
         serverUrl = "";
+        this.iceCandidate = new IceCandidate(this.sdpMid, this.sdpMLineIndex, sdp);
     }
 
     FancyRTCIceCandidate(IceCandidate candidate) {
@@ -37,6 +38,7 @@ public class FancyRTCIceCandidate {
         this.sdpMLineIndex = candidate.sdpMLineIndex;
         usernameFragment = "";
         serverUrl = candidate.serverUrl;
+        this.iceCandidate = candidate;
     }
 
     public String getCandidate() {
@@ -51,7 +53,7 @@ public class FancyRTCIceCandidate {
         candidate = sdp;
     }
 
-    public String getSdp(){
+    public String getSdp() {
         return candidate;
     }
 
@@ -83,17 +85,17 @@ public class FancyRTCIceCandidate {
         return serverUrl;
     }
 
-    public String toJSON(){
+    public String toJSON() {
         Gson gson = new Gson();
-        return  gson.toJson(this);
+        return gson.toJson(this);
     }
 
-    public static FancyRTCIceCandidate fromJSON(String json){
+    public static FancyRTCIceCandidate fromJSON(String json) {
         Gson gson = new Gson();
-        return  gson.fromJson(json,FancyRTCIceCandidate.class);
+        return gson.fromJson(json, FancyRTCIceCandidate.class);
     }
 
-    IceCandidate getIceCandidate(){
-        return new IceCandidate(getSdpMid(),getSdpMLineIndex(),getSdp());
+    IceCandidate getIceCandidate() {
+        return iceCandidate;
     }
 }

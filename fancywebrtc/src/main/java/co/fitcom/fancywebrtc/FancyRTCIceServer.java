@@ -1,5 +1,7 @@
 package co.fitcom.fancywebrtc;
 
+import android.util.Log;
+
 import org.webrtc.PeerConnection;
 
 import java.util.ArrayList;
@@ -13,15 +15,27 @@ public class FancyRTCIceServer {
     private String credential;
     private FancyRTCIceCredentialType credentialType;
     private String username;
+    PeerConnection.IceServer server;
 
-    FancyRTCIceServer(String url) {
+    public FancyRTCIceServer(String url) {
         this.urls = new String[]{url};
     }
 
-    FancyRTCIceServer(String[] urls) {
+    public FancyRTCIceServer(String url, String username, String credential) {
+        this.urls = new String[]{url};
+        this.username = username;
+        this.credential = credential;
+    }
+
+    public FancyRTCIceServer(String[] urls) {
         this.urls = urls;
     }
 
+    public FancyRTCIceServer(String[] urls, String username, String credential) {
+        this.urls = urls;
+        this.username = username;
+        this.credential = credential;
+    }
     PeerConnection.IceServer toWebRtc() {
         PeerConnection.IceServer.Builder builder = PeerConnection.IceServer.builder(Arrays.asList(urls));
         if (credential != null) {
@@ -30,7 +44,8 @@ public class FancyRTCIceServer {
         if (username != null) {
             builder.setUsername(username);
         }
-        return builder.createIceServer();
+        server = builder.createIceServer();
+        return server;
     }
 
     public void setCredential(String credential) {

@@ -9,30 +9,52 @@ import org.webrtc.SessionDescription;
  * Created by triniwiz on 1/8/19
  */
 public class FancyRTCSessionDescription {
-    private FancyRTCSdpType type;
-    private String description;
+    private SessionDescription sessionDescription;
 
     public FancyRTCSessionDescription(FancyRTCSdpType type, String description) {
-        this.type = type;
-        this.description = description;
+        SessionDescription.Type sdpType;
+        switch (type) {
+            case OFFER:
+                sdpType = SessionDescription.Type.OFFER;
+                break;
+            case ANSWER:
+                sdpType = SessionDescription.Type.ANSWER;
+                break;
+            case PRANSWER:
+                sdpType = SessionDescription.Type.PRANSWER;
+                break;
+            default:
+                sdpType = SessionDescription.Type.OFFER;
+        }
+        sessionDescription = new SessionDescription(sdpType, description);
     }
 
     public FancyRTCSdpType getType() {
-        return type;
+        switch (sessionDescription.type) {
+            case OFFER:
+                return FancyRTCSdpType.OFFER;
+            case ANSWER:
+                return FancyRTCSdpType.ANSWER;
+            case PRANSWER:
+                return FancyRTCSdpType.PRANSWER;
+            default:
+                return FancyRTCSdpType.OFFER;
+        }
     }
 
     public String getDescription() {
-        return description;
+        return sessionDescription.description;
     }
 
     public String toJSON() {
         Gson gson = new Gson();
-        return gson.toJson(this);
+        return gson.toJson(sessionDescription);
     }
 
     public static FancyRTCSessionDescription fromJSON(String json) {
         Gson gson = new Gson();
-        return gson.fromJson(json, FancyRTCSessionDescription.class);
+        SessionDescription sessionDescription = gson.fromJson(json, SessionDescription.class);
+        return fromRTCSessionDescription(sessionDescription);
     }
 
     static FancyRTCSessionDescription fromRTCSessionDescription(SessionDescription sdp) {
@@ -54,16 +76,7 @@ public class FancyRTCSessionDescription {
     }
 
     public SessionDescription getSessionDescription() {
-        switch (this.type) {
-            case PRANSWER:
-                return new SessionDescription(SessionDescription.Type.PRANSWER, description);
-            case ANSWER:
-                return new SessionDescription(SessionDescription.Type.ANSWER, description);
-            case OFFER:
-                return new SessionDescription(SessionDescription.Type.OFFER, description);
-            default:
-                return null;
-        }
+        return sessionDescription;
     }
 
 }

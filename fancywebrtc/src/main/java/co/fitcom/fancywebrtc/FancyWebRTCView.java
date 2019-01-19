@@ -13,6 +13,7 @@ import org.webrtc.VideoTrack;
 public class FancyWebRTCView extends SurfaceViewRenderer {
     private VideoTrack track;
     private FancyRTCMediaStream stream;
+    private MediaStream mediaStream;
 
     public FancyWebRTCView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -41,6 +42,20 @@ public class FancyWebRTCView extends SurfaceViewRenderer {
         this.stream = stream;
         if (this.stream != null) {
             MediaStream mediaStream = this.stream.getStream();
+            if (mediaStream.videoTracks.size() > 0) {
+                VideoTrack track = mediaStream.videoTracks.get(0);
+                if (this.track != null) {
+                    this.track.dispose();
+                }
+                this.track = track;
+                track.addSink(this);
+            }
+        }
+    }
+
+    public void setSrcObject(MediaStream stream) {
+        if (this.stream != null) {
+            mediaStream = stream;
             if (mediaStream.videoTracks.size() > 0) {
                 VideoTrack track = mediaStream.videoTracks.get(0);
                 if (this.track != null) {
