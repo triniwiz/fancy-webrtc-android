@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         localView = findViewById(R.id.localView);
         localView.setMirror(true);
         remoteView = findViewById(R.id.remoteView);
-
+/*
         try {
             IO.Options options = new IO.Options();
             options.forceNew = true;
@@ -291,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-      /*  webRTC.getUserMedia(FancyWebRTC.Quality.HIGHEST, new FancyWebRTCListener.GetUserMediaListener() {
+        webRTC.getUserMedia(FancyWebRTC.Quality.HIGHEST, new FancyWebRTCListener.GetUserMediaListener() {
             @Override
             public void webRTCClientOnGetUserMedia(FancyWebRTC client, MediaStream stream) {
                 localStream = stream;
@@ -312,7 +312,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void goToAdvanced(View view) {
         Intent intent = new Intent(this, Advanced.class);
-        webRTC.disconnect();
+        if(webRTC != null){
+            webRTC.disconnect();
+        }
         startActivity(intent);
     }
 

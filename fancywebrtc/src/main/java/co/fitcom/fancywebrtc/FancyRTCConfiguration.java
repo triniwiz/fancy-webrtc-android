@@ -4,6 +4,7 @@ import org.webrtc.PeerConnection;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by triniwiz on 1/7/19
@@ -34,6 +35,42 @@ public class FancyRTCConfiguration {
             list.add(server.toWebRtc());
         }
         configuration = new PeerConnection.RTCConfiguration(list);
+
+        configuration.enableDtlsSrtp = true;
+        configuration.enableRtpDataChannel = true;
+
+        configuration.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
+        configuration.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
+        configuration.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
+        configuration.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
+        configuration.keyType = PeerConnection.KeyType.ECDSA;
+    }
+
+    @SuppressWarnings("unchecked")
+    public FancyRTCConfiguration(Map<String, Object> options) {
+        for (String key : options.keySet()) {
+            Object value = options.get(key);
+            switch (key) {
+                case "bundlePolicy":
+                    setBundlePolicy((FancyRTCBundlePolicy) value);
+                    break;
+                case "sdpSemantics":
+                    setSdpSemantics((FancyRTCSdpSemantics) value);
+                    break;
+                case "iceCandidatePoolSize":
+                    setIceCandidatePoolSize((int) value);
+                    break;
+                case "iceTransportPolicy":
+                    setIceTransportPolicy((FancyRTCIceTransportPolicy) value);
+                    break;
+                case "rtcpMuxPolicy":
+                    setRtcpMuxPolicy((FancyRTCRtcpMuxPolicy) value);
+                    break;
+                case "iceServers":
+                    if(value instanceof List) setIceServers((List<FancyRTCIceServer>) value);
+                    break;
+            }
+        }
     }
 
     private void initProperties() {
@@ -83,6 +120,23 @@ public class FancyRTCConfiguration {
         }
         configuration = new PeerConnection.RTCConfiguration(list);
     }
+
+    public void setSdpSemantics(FancyRTCSdpSemantics semantics) {
+        if (semantics == FancyRTCSdpSemantics.UNIFIED_PLAN) {
+            configuration.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+        } else {
+            configuration.sdpSemantics = PeerConnection.SdpSemantics.PLAN_B;
+        }
+    }
+
+    public FancyRTCSdpSemantics getSdpSemantics() {
+        if (configuration.sdpSemantics == PeerConnection.SdpSemantics.UNIFIED_PLAN) {
+            return FancyRTCSdpSemantics.UNIFIED_PLAN;
+        } else {
+            return FancyRTCSdpSemantics.PLAN_B;
+        }
+    }
+
 
     public void setBundlePolicy(FancyRTCBundlePolicy bundlePolicy) {
         this.bundlePolicy = bundlePolicy;
@@ -136,7 +190,7 @@ public class FancyRTCConfiguration {
 
     public void setRtcpMuxPolicy(FancyRTCRtcpMuxPolicy rtcpMuxPolicy) {
         this.rtcpMuxPolicy = rtcpMuxPolicy;
-        switch (rtcpMuxPolicy){
+        switch (rtcpMuxPolicy) {
             case NEGOTIATE:
                 configuration.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.NEGOTIATE;
                 break;
@@ -147,12 +201,11 @@ public class FancyRTCConfiguration {
     }
 
     public void setIceServers(List<FancyRTCIceServer> iceServers) {
-        this.iceServers = iceServers;
-        List<PeerConnection.IceServer> list = new ArrayList<>();
         for (FancyRTCIceServer server : iceServers) {
-            list.add(server.toWebRtc());
+            this.iceServers.add(server);
+            configuration.iceServers.add(server.toWebRtc());
         }
-        configuration.iceServers = list;
+
     }
 
     public List<FancyRTCIceServer> getIceServers() {

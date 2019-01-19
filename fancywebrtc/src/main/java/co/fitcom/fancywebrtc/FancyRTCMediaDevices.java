@@ -14,11 +14,15 @@ import org.webrtc.CameraVideoCapturer;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnectionFactory;
+import org.webrtc.Size;
 import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,6 +33,7 @@ public class FancyRTCMediaDevices {
     private static final int DEFAULT_HEIGHT = 480;
     private static final int DEFAULT_WIDTH = 640;
     private static final int DEFAULT_FPS = 15;
+    private static Map<String, CameraVideoCapturer> capturerMap = new HashMap<>();
 
     public static interface GetUserMediaListener {
         public void onSuccess(FancyRTCMediaStream mediaStream);
@@ -39,7 +44,6 @@ public class FancyRTCMediaDevices {
     public static void getUserMedia(Context context, FancyRTCMediaStreamConstraints constraints, GetUserMediaListener listener) {
         FancyRTCPeerConnection.executor.execute(() -> {
             String streamId = FancyUtils.getUUID();
-            Log.d("co.test", " getUserMedia" + FancyRTCPeerConnection.factory);
             MediaStream localStream = factory.createLocalMediaStream(streamId);
 
             VideoSource videoSource = null;
@@ -74,8 +78,7 @@ public class FancyRTCMediaDevices {
             }
 
             CameraEnumerator enumerator;
-            Log.d("co.test", "Camera2Enumerator.isSupported " + Camera2Enumerator.isSupported(context) + " other check " + (Build.VERSION.SDK_INT >= 21));
-            if (Build.VERSION.SDK_INT >= 21) {
+            if (Camera2Enumerator.isSupported(context)) {
                 enumerator = new Camera2Enumerator(context);
             } else {
                 enumerator = new Camera1Enumerator(false);
@@ -164,7 +167,6 @@ public class FancyRTCMediaDevices {
 
                 @Override
                 public void onCameraOpening(String s) {
-
                 }
 
                 @Override
@@ -178,12 +180,13 @@ public class FancyRTCMediaDevices {
                 }
             });
 
+            capturerMap.put(capturer.toString(), capturer);
+
             int w; // Final width
             int h; // Final height
             int f = frameRate; // Final Frames per second
-
-            capturer.initialize(SurfaceTextureHelper.create("FancyWebRTCGetMedia", FancyWebRTCEglUtils.getRootEglBaseContext()), context, videoSource.getCapturerObserver());
-
+            capturer.initialize(SurfaceTextureHelper.create(Thread.currentThread().getName(), FancyWebRTCEglUtils.getRootEglBaseContext()), context, videoSource.getCapturerObserver());
+            List<CameraEnumerationAndroid.CaptureFormat> formatList = enumerator.getSupportedFormats(selectedDevice);
             if (width != null && width.getClass() == Integer.class) {
                 w = (int) width;
             } else if (maxWidth > -1) {
@@ -209,6 +212,7 @@ public class FancyRTCMediaDevices {
             }
 
 
+            /*
             CameraEnumerationAndroid.CaptureFormat firstFormat = enumerator.getSupportedFormats(selectedDevice).get(0); // Highest format
             if(h > firstFormat.height){
                 h = firstFormat.height;
@@ -219,8 +223,18 @@ public class FancyRTCMediaDevices {
             if(f > firstFormat.framerate.max){
                 f = firstFormat.framerate.max;
             }
-            capturer.startCapture(w, h, f);
-            videoSource.adaptOutputFormat(w, h, f);
+            */
+
+            List<Size> sizeList = new ArrayList<>();
+            List<CameraEnumerationAndroid.CaptureFormat.FramerateRange> fpsRange = new ArrayList<>();
+            for (CameraEnumerationAndroid.CaptureFormat format : formatList) {
+                sizeList.add(new Size(format.width, format.height));
+                fpsRange.add(new CameraEnumerationAndroid.CaptureFormat.FramerateRange(format.framerate.min, format.framerate.max));
+            }
+            Size closestSize = CameraEnumerationAndroid.getClosestSupportedSize(sizeList, w, h);
+            CameraEnumerationAndroid.CaptureFormat.FramerateRange closestFrameRate = CameraEnumerationAndroid.getClosestSupportedFramerateRange(fpsRange, f);
+            capturer.startCapture(closestSize.width, closestSize.height, closestFrameRate.max);
+            //videoSource.adaptOutputFormat(w, h, f);
             FancyRTCMediaStream fancyMediaStream = new FancyRTCMediaStream(localStream);
             listener.onSuccess(fancyMediaStream);
         });

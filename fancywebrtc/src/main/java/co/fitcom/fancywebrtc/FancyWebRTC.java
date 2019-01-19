@@ -4,11 +4,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
-import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.Base64;
-import android.util.Log;
 
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
@@ -82,7 +80,7 @@ public class FancyWebRTC {
     private final Map<String, DataChannel> dataChannels = new HashMap<>();
     private final Map<String, FancyWebRTCListener.GetUserMediaListener> getUserMediaListenerMap = new HashMap<>();
     private final Context appContext;
-    public static String Tag = "co.fitcom.fancywebrtc";
+    public static String Tag = "co.fitcom.fancywebrtc.logger";
     class MediaData {
         public final MediaSource mediaSource;
         public final MediaStreamTrack track;

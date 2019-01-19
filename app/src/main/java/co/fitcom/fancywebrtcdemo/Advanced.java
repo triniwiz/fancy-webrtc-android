@@ -8,11 +8,13 @@ import android.view.View;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -20,6 +22,7 @@ import java.util.concurrent.Executors;
 
 import co.fitcom.fancywebrtc.FancyRTCAudioTrack;
 import co.fitcom.fancywebrtc.FancyRTCDataChannel;
+import co.fitcom.fancywebrtc.FancyRTCIceServer;
 import co.fitcom.fancywebrtc.FancyRTCMediaConstraints;
 import co.fitcom.fancywebrtc.FancyRTCMediaDevices;
 import co.fitcom.fancywebrtc.FancyRTCMediaStream;
@@ -30,6 +33,7 @@ import co.fitcom.fancywebrtc.FancyRTCIceCandidate;
 import co.fitcom.fancywebrtc.FancyRTCPeerConnection;
 import co.fitcom.fancywebrtc.FancyRTCSdpType;
 import co.fitcom.fancywebrtc.FancyRTCSessionDescription;
+import co.fitcom.fancywebrtc.FancyRTCTrackEvent;
 import co.fitcom.fancywebrtc.FancyVideoTrack;
 import co.fitcom.fancywebrtc.FancyWebRTC;
 import co.fitcom.fancywebrtc.FancyWebRTCView;
@@ -45,21 +49,19 @@ public class Advanced extends AppCompatActivity {
     FancyRTCMediaStream localStream;
     private final Map<String, FancyRTCDataChannel> dataChannels = new HashMap<>();
     private ArrayList<FancyRTCIceCandidate> remoteIceCandidates;
-    private static String TAG = "co.fitcom.fancywebrtc.advanced";
+    static String TAG = FancyWebRTC.Tag;
+    boolean inCall = false;
+    boolean isInitiator = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_advanced);
-        PeerConnectionFactory.InitializationOptions.Builder builder = PeerConnectionFactory.InitializationOptions.builder(this);
-        builder.setEnableInternalTracer(true);
-        PeerConnectionFactory.initialize(builder.createInitializationOptions());
         remoteIceCandidates = new ArrayList<>();
         me = UUID.randomUUID().toString();
         localView = findViewById(R.id.localView);
         localView.setMirror(true);
         remoteView = findViewById(R.id.remoteView);
-
         try {
             IO.Options options = new IO.Options();
             options.forceNew = true;
@@ -72,7 +74,6 @@ public class Advanced extends AppCompatActivity {
                     String from = object.getString("from");
                     String session = object.getString("sdp");
                     String to = object.getString("to");
-                    Log.d(TAG, "call:incoming" + " to: " + to + " from: " + from);
                     if (to.contains(me)) {
                         if (localStream != null) {
                             for (FancyVideoTrack track : localStream.getVideoTracks()) {
@@ -96,10 +97,7 @@ public class Advanced extends AppCompatActivity {
                     String from = object.getString("from");
                     String session = object.getString("sdp");
                     String to = object.getString("to");
-                    Log.d(TAG, "call:answer");
-                    Log.d(TAG, "me : " + me + " from: " + from + " to: " + to);
                     if (to.contains(me)) {
-                        Log.d(TAG, me);
                         FancyRTCSessionDescription sdp = new FancyRTCSessionDescription(FancyRTCSdpType.OFFER, session);
                         createAnswerForOfferReceived(sdp);
                     }
@@ -108,19 +106,17 @@ public class Advanced extends AppCompatActivity {
                 }
             }));
 
-            socket.on("call:answered", args -> runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
+            socket.on("call:answered", args -> runOnUiThread(() -> {
+                if (!inCall) {
                     JSONObject object = (JSONObject) args[0];
                     try {
                         String from = object.getString("from");
                         String session = object.getString("sdp");
                         String to = object.getString("to");
                         if (to.contains(me)) {
-                            Log.d(TAG, "call:answered");
                             FancyRTCSessionDescription sdp = new FancyRTCSessionDescription(FancyRTCSdpType.ANSWER, session);
                             handleAnswerReceived(sdp);
-                            dataChannelCreate("osei");
+                            //dataChannelCreate("osei");
                             //dataChannelSend("osei", "Test", FancyWebRTC.DataChannelMessageType.TEXT);
                         }
                     } catch (JSONException e) {
@@ -130,7 +126,6 @@ public class Advanced extends AppCompatActivity {
             }));
 
             socket.on("call:iceCandidate", args -> {
-                Log.d(TAG, "call:iceCandidate");
                 JSONObject object = (JSONObject) args[0];
 
                 try {
@@ -167,12 +162,18 @@ public class Advanced extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        /*
+        List<FancyRTCIceServer> servers = new ArrayList<>();
+        FancyRTCIceServer turnServerOne = new FancyRTCIceServer("turn:192.158.29.39:3478?transport=udp", "JZEOEt2V3Qb0y27GRntt2u2PAYA=", "28224511:1379330808");
+        FancyRTCIceServer turnServerTwo = new FancyRTCIceServer("turn:192.158.29.39:3478?transport=tcp", "JZEOEt2V3Qb0y27GRntt2u2PAYA=", "28224511:1379330808");
+        FancyRTCIceServer turnServerThree = new FancyRTCIceServer("turn:numb.viagenie.ca", "muazkh", "webrtc@live.com");
+        servers.add(turnServerOne);
+        servers.add(turnServerTwo);
+        servers.add(turnServerThree);
+        */
         FancyRTCConfiguration configuration = new FancyRTCConfiguration();
-        connection = new FancyRTCPeerConnection(configuration);
-        connection.setOnTrackListener(event -> {
-            connection.addTrack(event.getMediaTrack());
-
-        });
+        connection = new FancyRTCPeerConnection(this, configuration);
+        connection.setOnTrackListener(event -> remoteView.setSrcObject(event.getStreams().get(0)));
         connection.setOnIceCandidateListener(candidate -> {
             JSONObject object = new JSONObject();
             try {
@@ -181,11 +182,10 @@ public class Advanced extends AppCompatActivity {
                 object.put("sdpMid", candidate.getSdpMid());
                 object.put("sdpMLineIndex", candidate.getSdpMLineIndex());
                 object.put("serverUrl", candidate.getServerUrl());
-
+                socket.emit("iceCandidate", object);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            socket.emit("iceCandidate", object);
         });
         if (FancyWebRTC.hasPermissions(this)) {
             setUpUserMedia();
@@ -195,7 +195,11 @@ public class Advanced extends AppCompatActivity {
     }
 
     public void setUpUserMedia() {
-        FancyRTCMediaStreamConstraints constraints = new FancyRTCMediaStreamConstraints(true, true);
+        Map<String, Object> video = new HashMap<>();
+        video.put("facingMode", "user");
+        video.put("width", 960);
+        video.put("height", 720);
+        FancyRTCMediaStreamConstraints constraints = new FancyRTCMediaStreamConstraints(true, video);
         FancyRTCMediaDevices.getUserMedia(this, constraints, new FancyRTCMediaDevices.GetUserMediaListener() {
             @Override
             public void onSuccess(FancyRTCMediaStream mediaStream) {
@@ -211,8 +215,8 @@ public class Advanced extends AppCompatActivity {
     }
 
     public void makeCall(View view) {
-        Log.d(TAG, "makeCall " + connection);
         if (connection != null) {
+            isInitiator = true;
             if (localStream != null) {
                 for (FancyVideoTrack track : localStream.getVideoTracks()) {
                     connection.addTrack(track);
@@ -224,7 +228,7 @@ public class Advanced extends AppCompatActivity {
             connection.createOffer(new FancyRTCMediaConstraints(), new FancyRTCPeerConnection.SdpCreateListener() {
                 @Override
                 public void onSuccess(FancyRTCSessionDescription description) {
-                    handleSdpGenerated(description);
+                    setInitiatorLocalSdp(description);
                 }
 
                 @Override
@@ -236,7 +240,6 @@ public class Advanced extends AppCompatActivity {
     }
 
     public void answerCall(View view) {
-
     }
 
     public void endCall(View view) {
@@ -251,34 +254,34 @@ public class Advanced extends AppCompatActivity {
         remoteIceCandidates.clear();
     }
 
-    void startCall(FancyRTCSessionDescription sdp) {
-        Log.d(TAG, "startCall" + " type: " + sdp.getType());
-        if (sdp.getType() == FancyRTCSdpType.ANSWER) {
-            JSONObject object = new JSONObject();
-            try {
-                object.put("from", me);
-                object.put("sdp", sdp.getDescription());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+    void sendNonInitiatorSdp(FancyRTCSessionDescription sdp) {
+        JSONObject object = new JSONObject();
+        try {
+            object.put("from", me);
+            object.put("sdp", sdp.getDescription());
+            /* handleAnswerReceived(sdp); */ // ???
             socket.emit("answered", object);
-            handleAnswerReceived(sdp);
-        } else if (sdp.getType() == FancyRTCSdpType.OFFER) {
-            JSONObject object = new JSONObject();
-            try {
-                object.put("from", me);
-                object.put("sdp", sdp.getDescription());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void sendInitiatorSdp(FancyRTCSessionDescription sdp) {
+        JSONObject object = new JSONObject();
+        try {
+            object.put("from", me);
+            object.put("sdp", sdp.getDescription());
             socket.emit("call", object);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 
     void createAnswerForOfferReceived(final FancyRTCSessionDescription remoteSdp) {
         if (connection == null || remoteSdp == null) return;
-        if (connection.getRemoteDescription() != null && (connection.getRemoteDescription().getType() == FancyRTCSdpType.ANSWER && remoteSdp.getType() == FancyRTCSdpType.ANSWER))
+       /* if (connection.getRemoteDescription() != null && (connection.getRemoteDescription().getType() == FancyRTCSdpType.ANSWER && remoteSdp.getType() == FancyRTCSdpType.ANSWER))
             return;
+        */
         connection.setRemoteDescription(remoteSdp, new FancyRTCPeerConnection.SdpSetListener() {
             @Override
             public void onSuccess() {
@@ -286,31 +289,14 @@ public class Advanced extends AppCompatActivity {
                 connection.createAnswer(new FancyRTCMediaConstraints(), new FancyRTCPeerConnection.SdpCreateListener() {
                     @Override
                     public void onSuccess(FancyRTCSessionDescription description) {
-                        handleSdpGenerated(description);
-                        startCall(description);
+                        setNonInitiatorLocalSdp(description);
                     }
 
                     @Override
                     public void onError(String error) {
-
+                        didReceiveError(error);
                     }
                 });
-            }
-
-            @Override
-            public void onError(String error) {
-
-            }
-        });
-    }
-
-    void handleAnswerReceived(final FancyRTCSessionDescription sdp) {
-        if (connection == null || sdp == null) return;
-        FancyRTCSessionDescription newSdp = new FancyRTCSessionDescription(FancyRTCSdpType.ANSWER, sdp.getDescription());
-        connection.setRemoteDescription(newSdp, new FancyRTCPeerConnection.SdpSetListener() {
-            @Override
-            public void onSuccess() {
-
             }
 
             @Override
@@ -320,14 +306,47 @@ public class Advanced extends AppCompatActivity {
         });
     }
 
-    void handleSdpGenerated(final FancyRTCSessionDescription sdp) {
+    void handleAnswerReceived(final FancyRTCSessionDescription sdp) {
+        if (connection == null || sdp == null || inCall) return;
+        FancyRTCSessionDescription newSdp = new FancyRTCSessionDescription(FancyRTCSdpType.ANSWER, sdp.getDescription());
+        connection.setRemoteDescription(newSdp, new FancyRTCPeerConnection.SdpSetListener() {
+            @Override
+            public void onSuccess() {
+                inCall = true;
+            }
+
+            @Override
+            public void onError(String error) {
+                didReceiveError(error);
+            }
+        });
+    }
+
+    void setNonInitiatorLocalSdp(final FancyRTCSessionDescription sdp) {
         if (connection == null) return;
         if (connection.getLocalDescription() != null && (connection.getLocalDescription().getType() == FancyRTCSdpType.ANSWER && sdp.getType() == FancyRTCSdpType.ANSWER))
             return;
         connection.setLocalDescription(sdp, new FancyRTCPeerConnection.SdpSetListener() {
             @Override
             public void onSuccess() {
-                startCall(sdp);
+                sendNonInitiatorSdp(sdp);
+            }
+
+            @Override
+            public void onError(String error) {
+                didReceiveError(error);
+            }
+        });
+    }
+
+    void setInitiatorLocalSdp(final FancyRTCSessionDescription sdp) {
+        if (connection == null) return;
+        if (connection.getLocalDescription() != null && (connection.getLocalDescription().getType() == FancyRTCSdpType.ANSWER && sdp.getType() == FancyRTCSdpType.ANSWER))
+            return;
+        connection.setLocalDescription(sdp, new FancyRTCPeerConnection.SdpSetListener() {
+            @Override
+            public void onSuccess() {
+                sendInitiatorSdp(sdp);
             }
 
             @Override
