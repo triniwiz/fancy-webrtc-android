@@ -12,11 +12,13 @@ import org.json.JSONObject;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+
 import java.util.Map;
 import java.util.UUID;
 
 import co.fitcom.fancywebrtc.FancyRTCAudioTrack;
 import co.fitcom.fancywebrtc.FancyRTCDataChannel;
+
 import co.fitcom.fancywebrtc.FancyRTCMediaConstraints;
 import co.fitcom.fancywebrtc.FancyRTCMediaDevices;
 import co.fitcom.fancywebrtc.FancyRTCMediaStream;
@@ -27,6 +29,7 @@ import co.fitcom.fancywebrtc.FancyRTCIceCandidate;
 import co.fitcom.fancywebrtc.FancyRTCPeerConnection;
 import co.fitcom.fancywebrtc.FancyRTCSdpType;
 import co.fitcom.fancywebrtc.FancyRTCSessionDescription;
+
 import co.fitcom.fancywebrtc.FancyRTCVideoTrack;
 import co.fitcom.fancywebrtc.FancyWebRTC;
 import co.fitcom.fancywebrtc.FancyWebRTCView;
@@ -69,9 +72,11 @@ public class Advanced extends AppCompatActivity {
                     String to = object.getString("to");
                     if (to.contains(me)) {
                         if (localStream != null) {
+
                             for (FancyRTCVideoTrack track : localStream.getVideoTracks()) {
                                 connection.addTrack(track);
                             }
+                          
                             for (FancyRTCAudioTrack track : localStream.getAudioTracks()) {
                                 connection.addTrack(track);
                             }
@@ -211,6 +216,7 @@ public class Advanced extends AppCompatActivity {
         if (connection != null) {
             isInitiator = true;
             if (localStream != null) {
+
                 for (FancyRTCVideoTrack track : localStream.getVideoTracks()) {
                     connection.addTrack(track);
                 }

@@ -45,6 +45,7 @@ public class FancyRTCSessionDescription {
     public String getSDP() {
         return sessionDescription.description;
     }
+
     public String getDescription() {
         return sessionDescription.description;
     }

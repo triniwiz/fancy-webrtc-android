@@ -47,6 +47,7 @@ public class FancyRTCMediaStream {
         return fancyAudioTracks;
     }
 
+
     public void addTrack(FancyRTCVideoTrack track) {
         stream.addTrack(track.videoTrack);
     }
@@ -54,6 +55,7 @@ public class FancyRTCMediaStream {
     public void addTrack(FancyRTCAudioTrack track) {
         stream.addTrack(track.audioTrack);
     }
+
 
     public void removeTrack(FancyRTCVideoTrack track) {
         stream.removeTrack(track.videoTrack);
