@@ -10,4 +10,8 @@ public class FancyRTCDataChannel {
     FancyRTCDataChannel(DataChannel channel){
         dataChannel = channel;
     }
+
+    public DataChannel getDataChannel() {
+        return dataChannel;
+    }
 }

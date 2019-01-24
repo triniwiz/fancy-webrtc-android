@@ -11,4 +11,8 @@ public class FancyRTCRtpParameters {
     public FancyRTCRtpParameters(RtpParameters parameters) {
         this.parameters = parameters;
     }
+
+    public RtpParameters getParameters() {
+        return parameters;
+    }
 }

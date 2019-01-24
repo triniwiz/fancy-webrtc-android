@@ -95,7 +95,7 @@ public class FancyRTCIceCandidate {
         return gson.fromJson(json, FancyRTCIceCandidate.class);
     }
 
-    IceCandidate getIceCandidate() {
+    public IceCandidate getIceCandidate() {
         return iceCandidate;
     }
 }

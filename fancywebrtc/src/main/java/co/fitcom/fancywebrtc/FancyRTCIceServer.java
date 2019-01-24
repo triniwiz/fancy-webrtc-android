@@ -36,7 +36,8 @@ public class FancyRTCIceServer {
         this.username = username;
         this.credential = credential;
     }
-    PeerConnection.IceServer toWebRtc() {
+
+    public PeerConnection.IceServer toWebRtc() {
         PeerConnection.IceServer.Builder builder = PeerConnection.IceServer.builder(Arrays.asList(urls));
         if (credential != null) {
             builder.setPassword(credential);
@@ -46,6 +47,10 @@ public class FancyRTCIceServer {
         }
         server = builder.createIceServer();
         return server;
+    }
+
+    public PeerConnection.IceServer getIceServer() {
+        return toWebRtc();
     }
 
     public void setCredential(String credential) {

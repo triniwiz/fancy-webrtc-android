@@ -220,7 +220,7 @@ public class FancyRTCConfiguration {
         return peerIdentity;
     }
 
-    PeerConnection.RTCConfiguration getConfiguration() {
+    public PeerConnection.RTCConfiguration getConfiguration() {
         return configuration;
     }
 }

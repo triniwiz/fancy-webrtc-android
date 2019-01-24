@@ -18,7 +18,7 @@ public class FancyRTCDataChannelInit {
     public FancyRTCDataChannelInit() {
     }
 
-    DataChannel.Init getInit() {
+    public DataChannel.Init getInit() {
         DataChannel.Init init = new DataChannel.Init();
         init.id = id;
         init.ordered = ordered;
