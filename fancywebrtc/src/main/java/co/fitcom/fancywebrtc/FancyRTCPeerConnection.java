@@ -256,16 +256,16 @@ public class FancyRTCPeerConnection {
         public void onIceGatheringStateChange();
     }
 
+    public void setOnIceGatheringStateChangeListener(FancyOnIceGatheringStateChangeListener listener) {
+        onIceGatheringStateChangeListener = listener;
+    }
+
     public static interface FancyOnAddStreamListener {
         public void onAddStream(FancyRTCMediaStream stream);
     }
 
-    public void setOnRemoveStreamListener(FancyOnAddStreamListener listener) {
+    public void setOnAddStreamListener(FancyOnAddStreamListener listener) {
         onAddStreamListener = listener;
-    }
-
-    public void setOnIceGatheringStateChangeListener(FancyOnIceGatheringStateChangeListener listener) {
-        onIceGatheringStateChangeListener = listener;
     }
 
     public static interface FancyOnNegotiationNeededListener {
@@ -321,9 +321,9 @@ public class FancyRTCPeerConnection {
         }
     }
 
-    public void addTrack(FancyRTCMediaStreamTrack track) {
+    public void addTrack(FancyRTCMediaStreamTrack track, List<String> streamIds) {
         if (connection != null) {
-            executor.execute(() -> connection.addTrack(track.getMediaStreamTrack()));
+            executor.execute(() -> connection.addTrack(track.getMediaStreamTrack(), streamIds));
         }
     }
 

@@ -285,7 +285,7 @@ public class FancyWebRTC {
                     public void onAddStream(MediaStream mediaStream) {
                         if (listener != null) {
                             if (mediaStream.videoTracks.size() > 0) {
-                                listener.webRTCClientDidReceiveRemoteVideoTrackStream(ref.get(), mediaStream.videoTracks.get(0), mediaStream);
+                                listener.webRTCClientDidReceiveStream(ref.get(), mediaStream);
                             }
 
                         }

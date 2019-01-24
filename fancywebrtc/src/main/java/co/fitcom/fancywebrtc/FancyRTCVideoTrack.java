@@ -6,10 +6,10 @@ import org.webrtc.VideoTrack;
 /**
  * Created by triniwiz on 1/16/19
  */
-public class FancyVideoTrack extends FancyRTCMediaStreamTrack {
+public class FancyRTCVideoTrack extends FancyRTCMediaStreamTrack {
     VideoTrack videoTrack;
 
-    public FancyVideoTrack(VideoTrack track) {
+    public FancyRTCVideoTrack(VideoTrack track) {
         super(track);
         this.videoTrack = track;
     }

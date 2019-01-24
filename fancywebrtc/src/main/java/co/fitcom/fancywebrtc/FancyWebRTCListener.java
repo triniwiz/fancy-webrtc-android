@@ -21,7 +21,7 @@ public interface FancyWebRTCListener {
 
     void webRTCClientOnRemoveStream(FancyWebRTC client, MediaStream stream);
 
-    void webRTCClientDidReceiveRemoteVideoTrackStream(FancyWebRTC client, VideoTrack track, MediaStream stream);
+    void webRTCClientDidReceiveStream(FancyWebRTC client, MediaStream stream);
 
     void webRTCClientDidGenerateIceCandidate(FancyWebRTC client, IceCandidate candidate);
 

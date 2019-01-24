@@ -42,6 +42,9 @@ public class FancyRTCSessionDescription {
         }
     }
 
+    public String getSDP() {
+        return sessionDescription.description;
+    }
     public String getDescription() {
         return sessionDescription.description;
     }
@@ -49,12 +52,6 @@ public class FancyRTCSessionDescription {
     public String toJSON() {
         Gson gson = new Gson();
         return gson.toJson(sessionDescription);
-    }
-
-    public static FancyRTCSessionDescription fromJSON(String json) {
-        Gson gson = new Gson();
-        SessionDescription sessionDescription = gson.fromJson(json, SessionDescription.class);
-        return fromRTCSessionDescription(sessionDescription);
     }
 
     static FancyRTCSessionDescription fromRTCSessionDescription(SessionDescription sdp) {
