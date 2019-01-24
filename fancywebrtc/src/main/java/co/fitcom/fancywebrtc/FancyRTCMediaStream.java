@@ -2,7 +2,6 @@ package co.fitcom.fancywebrtc;
 
 import org.webrtc.AudioTrack;
 import org.webrtc.MediaStream;
-import org.webrtc.MediaStreamTrack;
 import org.webrtc.VideoTrack;
 
 import java.util.ArrayList;
@@ -30,11 +29,11 @@ public class FancyRTCMediaStream {
         return stream.getId();
     }
 
-    public List<FancyVideoTrack> getVideoTracks() {
+    public List<FancyRTCVideoTrack> getVideoTracks() {
         List<VideoTrack> tracks = stream.videoTracks;
-        List<FancyVideoTrack> fancyVideoTracks = new ArrayList<>();
+        List<FancyRTCVideoTrack> fancyVideoTracks = new ArrayList<>();
         for (VideoTrack track : tracks) {
-            fancyVideoTracks.add(new FancyVideoTrack(track));
+            fancyVideoTracks.add(new FancyRTCVideoTrack(track));
         }
         return fancyVideoTracks;
     }
@@ -48,7 +47,8 @@ public class FancyRTCMediaStream {
         return fancyAudioTracks;
     }
 
-    public void addTrack(FancyVideoTrack track) {
+
+    public void addTrack(FancyRTCVideoTrack track) {
         stream.addTrack(track.videoTrack);
     }
 
@@ -56,7 +56,8 @@ public class FancyRTCMediaStream {
         stream.addTrack(track.audioTrack);
     }
 
-    public void removeTrack(FancyVideoTrack track) {
+
+    public void removeTrack(FancyRTCVideoTrack track) {
         stream.removeTrack(track.videoTrack);
     }
 
