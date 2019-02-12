@@ -11,6 +11,9 @@ import org.webrtc.SessionDescription;
 public class FancyRTCSessionDescription {
     private SessionDescription sessionDescription;
 
+    private FancyRTCSessionDescription(SessionDescription sdp){
+        sessionDescription = sdp;
+    }
     public FancyRTCSessionDescription(FancyRTCSdpType type, String description) {
         SessionDescription.Type sdpType;
         switch (type) {
@@ -24,7 +27,7 @@ public class FancyRTCSessionDescription {
                 sdpType = SessionDescription.Type.PRANSWER;
                 break;
             default:
-                sdpType = SessionDescription.Type.OFFER;
+                sdpType = null;
         }
         sessionDescription = new SessionDescription(sdpType, description);
     }
@@ -38,7 +41,7 @@ public class FancyRTCSessionDescription {
             case PRANSWER:
                 return FancyRTCSdpType.PRANSWER;
             default:
-                return FancyRTCSdpType.OFFER;
+                return null;
         }
     }
 
@@ -56,21 +59,7 @@ public class FancyRTCSessionDescription {
     }
 
     static FancyRTCSessionDescription fromRTCSessionDescription(SessionDescription sdp) {
-        FancyRTCSdpType type;
-        switch (sdp.type) {
-            case OFFER:
-                type = FancyRTCSdpType.OFFER;
-                break;
-            case ANSWER:
-                type = FancyRTCSdpType.ANSWER;
-                break;
-            case PRANSWER:
-                type = FancyRTCSdpType.PRANSWER;
-                break;
-            default:
-                type = FancyRTCSdpType.ROLLBACK;
-        }
-        return new FancyRTCSessionDescription(type, sdp.description);
+        return new FancyRTCSessionDescription(sdp);
     }
 
     public SessionDescription getSessionDescription() {

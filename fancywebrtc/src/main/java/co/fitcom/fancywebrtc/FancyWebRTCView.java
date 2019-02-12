@@ -2,6 +2,7 @@ package co.fitcom.fancywebrtc;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 
 import org.webrtc.MediaStream;
 import org.webrtc.SurfaceViewRenderer;
@@ -38,30 +39,26 @@ public class FancyWebRTCView extends SurfaceViewRenderer {
     }
 
     public void setSrcObject(FancyRTCMediaStream stream) {
-        if (this.mediaStream != null) {
-            mediaStream = stream.getStream();
-            if (mediaStream.videoTracks.size() > 0) {
-                VideoTrack track = mediaStream.videoTracks.get(0);
-                if (this.track != null) {
-                    this.track.dispose();
-                }
-                this.track = track;
-                track.addSink(this);
+        mediaStream = stream.getStream();
+        if (mediaStream.videoTracks.size() > 0) {
+            VideoTrack track = mediaStream.videoTracks.get(0);
+            if (this.track != null) {
+                this.track.dispose();
             }
+            this.track = track;
+            track.addSink(this);
         }
     }
 
     public void setSrcObject(MediaStream stream) {
-        if (this.mediaStream != null) {
-            mediaStream = stream;
-            if (mediaStream.videoTracks.size() > 0) {
-                VideoTrack track = mediaStream.videoTracks.get(0);
-                if (this.track != null) {
-                    this.track.dispose();
-                }
-                this.track = track;
-                track.addSink(this);
+        mediaStream = stream;
+        if (mediaStream.videoTracks.size() > 0) {
+            VideoTrack track = mediaStream.videoTracks.get(0);
+            if (this.track != null) {
+                this.track.dispose();
             }
+            this.track = track;
+            track.addSink(this);
         }
     }
 }

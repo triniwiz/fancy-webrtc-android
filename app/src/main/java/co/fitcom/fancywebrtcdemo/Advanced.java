@@ -13,6 +13,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -72,13 +73,14 @@ public class Advanced extends AppCompatActivity {
                     String to = object.getString("to");
                     if (to.contains(me)) {
                         if (localStream != null) {
-
+                            List<String> list = new ArrayList<>();
+                            list.add(localStream.getId());
                             for (FancyRTCVideoTrack track : localStream.getVideoTracks()) {
-                                connection.addTrack(track);
+                                connection.addTrack(track, list);
                             }
-                          
+
                             for (FancyRTCAudioTrack track : localStream.getAudioTracks()) {
-                                connection.addTrack(track);
+                                connection.addTrack(track, list);
                             }
                         }
                         FancyRTCSessionDescription sdp = new FancyRTCSessionDescription(FancyRTCSdpType.OFFER, session);
@@ -201,8 +203,8 @@ public class Advanced extends AppCompatActivity {
         FancyRTCMediaDevices.getUserMedia(this, constraints, new FancyRTCMediaDevices.GetUserMediaListener() {
             @Override
             public void onSuccess(FancyRTCMediaStream mediaStream) {
-                localView.setSrcObject(mediaStream);
                 localStream = mediaStream;
+                localView.setSrcObject(mediaStream);
             }
 
             @Override
@@ -216,12 +218,13 @@ public class Advanced extends AppCompatActivity {
         if (connection != null) {
             isInitiator = true;
             if (localStream != null) {
-
+                List<String> list = new ArrayList<>();
+                list.add(localStream.getId());
                 for (FancyRTCVideoTrack track : localStream.getVideoTracks()) {
-                    connection.addTrack(track);
+                    connection.addTrack(track, list);
                 }
                 for (FancyRTCAudioTrack track : localStream.getAudioTracks()) {
-                    connection.addTrack(track);
+                    connection.addTrack(track, list);
                 }
             }
             connection.createOffer(new FancyRTCMediaConstraints(), new FancyRTCPeerConnection.SdpCreateListener() {

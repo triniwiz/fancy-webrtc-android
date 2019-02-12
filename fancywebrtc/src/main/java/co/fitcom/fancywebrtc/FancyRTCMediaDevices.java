@@ -29,7 +29,6 @@ import java.util.Map;
  * Created by triniwiz on 1/8/19
  */
 public class FancyRTCMediaDevices {
-    static PeerConnectionFactory factory;
     private static final int DEFAULT_HEIGHT = 480;
     private static final int DEFAULT_WIDTH = 640;
     private static final int DEFAULT_FPS = 15;
@@ -41,10 +40,12 @@ public class FancyRTCMediaDevices {
         public void onError(String error);
     }
 
+
     public static void getUserMedia(Context context, FancyRTCMediaStreamConstraints constraints, GetUserMediaListener listener) {
         FancyRTCPeerConnection.executor.execute(() -> {
             String streamId = FancyUtils.getUUID();
-            MediaStream localStream = factory.createLocalMediaStream(streamId);
+            PeerConnectionFactory factory = FancyRTCPeerConnection.factory;
+            MediaStream localStream = FancyRTCPeerConnection.factory.createLocalMediaStream(streamId);
 
             VideoSource videoSource = null;
             if (constraints.isVideoEnabled) {

@@ -1,7 +1,6 @@
 package co.fitcom.fancywebrtc;
 
 import android.content.Context;
-import android.util.Log;
 
 import org.webrtc.AudioDecoderFactoryFactory;
 import org.webrtc.DataChannel;
@@ -52,17 +51,18 @@ public class FancyRTCPeerConnection {
     private FancyOnDataChannelListener onDataChannelListener;
     private FancyOnAddStreamListener onAddStreamListener;
     private FancyOnRemoveStreamListener onRemoveStreamListener;
-    VideoEncoderFactory encoderFactory;
-    VideoDecoderFactory decoderFactory;
 
-    private void init() {
+
+    static {
         executor.execute(() -> {
             PeerConnectionFactory.Builder builder = PeerConnectionFactory.builder();
             PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
             builder.setOptions(options);
+            VideoEncoderFactory encoderFactory;
+            VideoDecoderFactory decoderFactory;
             if (FancyWebRTCEglUtils.getRootEglBaseContext() != null) {
-               encoderFactory = new DefaultVideoEncoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext(), true, false);
-               decoderFactory = new DefaultVideoDecoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext());
+                encoderFactory = new DefaultVideoEncoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext(), true, false);
+                decoderFactory = new DefaultVideoDecoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext());
             } else {
                 encoderFactory = new SoftwareVideoEncoderFactory();
                 decoderFactory = new SoftwareVideoDecoderFactory();
@@ -71,11 +71,15 @@ public class FancyRTCPeerConnection {
             builder.setVideoDecoderFactory(decoderFactory);
             builder.setVideoEncoderFactory(encoderFactory);
             factory = builder.createPeerConnectionFactory();
-            FancyRTCMediaDevices.factory = factory;
+        });
+    }
+
+    private void init() {
+        executor.execute(() -> {
             connection = factory.createPeerConnection(configuration.getConfiguration(), new PeerConnection.Observer() {
                 @Override
                 public void onSignalingChange(PeerConnection.SignalingState signalingState) {
-                    if(onSignalingStateChangeListener != null){
+                    if (onSignalingStateChangeListener != null) {
                         onSignalingStateChangeListener.onSignalingStateChange();
                     }
                 }
@@ -93,7 +97,7 @@ public class FancyRTCPeerConnection {
 
                 @Override
                 public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
-                    if(onIceGatheringStateChangeListener != null){
+                    if (onIceGatheringStateChangeListener != null) {
                         onIceGatheringStateChangeListener.onIceGatheringStateChange();
                     }
                 }
@@ -178,24 +182,24 @@ public class FancyRTCPeerConnection {
         init();
     }
 
-    public FancyRTCPeerConnection(Context context , FancyRTCConfiguration configuration) {
+    public FancyRTCPeerConnection(Context context, FancyRTCConfiguration configuration) {
         this.context = context;
         this.configuration = configuration;
         init();
     }
 
     public FancyRTCSessionDescription getLocalDescription() {
-        if (connection != null && connection.getLocalDescription() != null) {
-            return FancyRTCSessionDescription.fromRTCSessionDescription(connection.getLocalDescription());
-        }
-        return null;
+        if (connection == null) return null;
+        SessionDescription sdp = connection.getLocalDescription();
+        if (sdp == null) return null;
+        return FancyRTCSessionDescription.fromRTCSessionDescription(sdp);
     }
 
     public FancyRTCSessionDescription getRemoteDescription() {
-        if (connection != null && connection.getRemoteDescription() != null) {
-            return FancyRTCSessionDescription.fromRTCSessionDescription(connection.getRemoteDescription());
-        }
-        return null;
+        if (connection == null) return null;
+        SessionDescription sdp = connection.getRemoteDescription();
+        if (sdp == null) return null;
+        return FancyRTCSessionDescription.fromRTCSessionDescription(sdp);
     }
 
     public FancyRTCPeerConnectionState getConnectionState() {
@@ -390,7 +394,7 @@ public class FancyRTCPeerConnection {
             executor.execute(() -> connection.createOffer(new SdpObserver() {
                 @Override
                 public void onCreateSuccess(SessionDescription sessionDescription) {
-                   listener.onSuccess(FancyRTCSessionDescription.fromRTCSessionDescription(sessionDescription));
+                    listener.onSuccess(FancyRTCSessionDescription.fromRTCSessionDescription(sessionDescription));
                 }
 
                 @Override
@@ -411,31 +415,29 @@ public class FancyRTCPeerConnection {
     }
 
     public void setLocalDescription(FancyRTCSessionDescription sdp, SdpSetListener listener) {
-        executor.execute(() -> {
-            if (connection != null) {
-                connection.setLocalDescription(new SdpObserver() {
-                    @Override
-                    public void onCreateSuccess(SessionDescription sessionDescription) {
+        if (connection != null) {
+            executor.execute(() -> connection.setLocalDescription(new SdpObserver() {
+                @Override
+                public void onCreateSuccess(SessionDescription sessionDescription) {
 
-                    }
+                }
 
-                    @Override
-                    public void onSetSuccess() {
-                       listener.onSuccess();
-                    }
+                @Override
+                public void onSetSuccess() {
+                    listener.onSuccess();
+                }
 
-                    @Override
-                    public void onCreateFailure(String s) {
+                @Override
+                public void onCreateFailure(String s) {
 
-                    }
+                }
 
-                    @Override
-                    public void onSetFailure(String s) {
-                        listener.onError(s);
-                    }
-                }, sdp.getSessionDescription());
-            }
-        });
+                @Override
+                public void onSetFailure(String s) {
+                    listener.onError(s);
+                }
+            }, sdp.getSessionDescription()));
+        }
     }
 
     public void setRemoteDescription(FancyRTCSessionDescription sdp, SdpSetListener listener) {
@@ -472,6 +474,7 @@ public class FancyRTCPeerConnection {
     AudioDeviceModule createLegacyAudioDevice() {
         return new LegacyAudioDeviceModule();
     }
+
     AudioDeviceModule createJavaAudioDevice() {
         return JavaAudioDeviceModule.builder(context)
                 .setSamplesReadyCallback(new JavaAudioDeviceModule.SamplesReadyCallback() {

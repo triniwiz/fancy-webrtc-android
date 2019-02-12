@@ -40,7 +40,7 @@ public class FancyRTCConfiguration {
         configuration.enableRtpDataChannel = true;
 
         configuration.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
-        configuration.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
+        configuration.bundlePolicy = PeerConnection.BundlePolicy.BALANCED;
         configuration.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
         configuration.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
         configuration.keyType = PeerConnection.KeyType.ECDSA;
