@@ -20,6 +20,7 @@ import java.util.UUID;
 import co.fitcom.fancywebrtc.FancyRTCAudioTrack;
 import co.fitcom.fancywebrtc.FancyRTCDataChannel;
 
+import co.fitcom.fancywebrtc.FancyRTCIceServer;
 import co.fitcom.fancywebrtc.FancyRTCMediaConstraints;
 import co.fitcom.fancywebrtc.FancyRTCMediaDevices;
 import co.fitcom.fancywebrtc.FancyRTCMediaStream;
@@ -171,7 +172,23 @@ public class Advanced extends AppCompatActivity {
         servers.add(turnServerTwo);
         servers.add(turnServerThree);
         */
-        FancyRTCConfiguration configuration = new FancyRTCConfiguration();
+        String[] servers = {"stun: stun.l.google.com:19302",
+                "stun: stun1.l.google.com:19302",
+                "stun: stun2.l.google.com:19302",
+                "stun: stun3.l.google.com:19302",
+                "stun: stun4.l.google.com:19302",
+                "stun: stun.ekiga.net",
+                "stun: stun.ideasip.com",
+                "stun: stun.schlund.de",
+                "stun: stun.stunprotocol.org:3478",
+                "stun: stun.voiparound.com",
+                "stun: stun.voipbuster.com",
+                "stun: stun.voipstunt.com",
+                "stun: stun.services.mozilla.com"};
+        FancyRTCIceServer rtcIceServer = new FancyRTCIceServer(servers);
+        List<FancyRTCIceServer> list = new ArrayList<>();
+        list.add(rtcIceServer);
+        FancyRTCConfiguration configuration = new FancyRTCConfiguration(list);
         connection = new FancyRTCPeerConnection(this, configuration);
         connection.setOnTrackListener(event -> remoteView.setSrcObject(event.getStreams().get(0)));
         connection.setOnIceCandidateListener(candidate -> {

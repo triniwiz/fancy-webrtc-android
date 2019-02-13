@@ -75,7 +75,7 @@ public class FancyWebRTC {
             "stun:stun3.l.google.com:19302",
             "stun:stun4.l.google.com:19302"
     };
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+    static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Map<String, MediaData> tracks = new HashMap<>();
     private final Map<String, DataChannel> dataChannels = new HashMap<>();
     private final Map<String, FancyWebRTCListener.GetUserMediaListener> getUserMediaListenerMap = new HashMap<>();
@@ -94,11 +94,12 @@ public class FancyWebRTC {
     }
 
     public static void init(Context context) {
-        FancyWebRTCEglUtils.getRootEglBase();
-        PeerConnectionFactory.InitializationOptions.Builder builder = PeerConnectionFactory.InitializationOptions.builder(context);
-        builder.setEnableInternalTracer(true);
-        PeerConnectionFactory.initialize(builder.createInitializationOptions());
-
+       executor.execute(() -> {
+           FancyWebRTCEglUtils.getRootEglBase();
+           PeerConnectionFactory.InitializationOptions.Builder builder = PeerConnectionFactory.InitializationOptions.builder(context);
+           builder.setEnableInternalTracer(true);
+           PeerConnectionFactory.initialize(builder.createInitializationOptions());
+       });
     }
 
     public FancyWebRTC(Context context, boolean videoEnabled, boolean audioEnabled) {

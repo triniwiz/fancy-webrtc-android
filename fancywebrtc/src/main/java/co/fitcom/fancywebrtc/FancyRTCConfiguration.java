@@ -36,18 +36,20 @@ public class FancyRTCConfiguration {
         }
         configuration = new PeerConnection.RTCConfiguration(list);
 
-        configuration.enableDtlsSrtp = true;
-        configuration.enableRtpDataChannel = true;
+       // configuration.enableDtlsSrtp = true;
+       // configuration.enableRtpDataChannel = true;
 
-        configuration.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
-        configuration.bundlePolicy = PeerConnection.BundlePolicy.BALANCED;
-        configuration.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
-        configuration.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
-        configuration.keyType = PeerConnection.KeyType.ECDSA;
+       // configuration.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
+       // configuration.bundlePolicy = PeerConnection.BundlePolicy.BALANCED;
+       // configuration.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE;
+       // configuration.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
+       // configuration.keyType = PeerConnection.KeyType.ECDSA;
     }
 
     @SuppressWarnings("unchecked")
     public FancyRTCConfiguration(Map<String, Object> options) {
+        configuration = new PeerConnection.RTCConfiguration(null);
+
         for (String key : options.keySet()) {
             Object value = options.get(key);
             switch (key) {

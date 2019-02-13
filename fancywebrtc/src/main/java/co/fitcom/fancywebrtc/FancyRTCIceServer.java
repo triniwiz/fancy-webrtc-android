@@ -1,5 +1,6 @@
 package co.fitcom.fancywebrtc;
 
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.webrtc.PeerConnection;
@@ -21,7 +22,7 @@ public class FancyRTCIceServer {
         this.urls = new String[]{url};
     }
 
-    public FancyRTCIceServer(String url, String username, String credential) {
+    public FancyRTCIceServer(String url, @Nullable String username, @Nullable String credential) {
         this.urls = new String[]{url};
         this.username = username;
         this.credential = credential;

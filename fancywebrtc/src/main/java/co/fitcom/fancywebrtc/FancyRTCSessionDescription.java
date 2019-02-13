@@ -1,5 +1,7 @@
 package co.fitcom.fancywebrtc;
 
+import android.util.Log;
+
 import com.google.gson.Gson;
 
 import org.json.JSONObject;
@@ -11,9 +13,10 @@ import org.webrtc.SessionDescription;
 public class FancyRTCSessionDescription {
     private SessionDescription sessionDescription;
 
-    private FancyRTCSessionDescription(SessionDescription sdp){
+    private FancyRTCSessionDescription(SessionDescription sdp) {
         sessionDescription = sdp;
     }
+
     public FancyRTCSessionDescription(FancyRTCSdpType type, String description) {
         SessionDescription.Type sdpType;
         switch (type) {

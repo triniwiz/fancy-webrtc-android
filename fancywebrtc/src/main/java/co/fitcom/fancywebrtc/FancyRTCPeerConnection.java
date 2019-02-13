@@ -1,18 +1,16 @@
 package co.fitcom.fancywebrtc;
 
 import android.content.Context;
+import android.util.Log;
 
-import org.webrtc.AudioDecoderFactoryFactory;
 import org.webrtc.DataChannel;
 import org.webrtc.DefaultVideoDecoderFactory;
 import org.webrtc.DefaultVideoEncoderFactory;
-import org.webrtc.EglBase;
 import org.webrtc.IceCandidate;
+import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
-import org.webrtc.RTCStatsCollectorCallback;
-import org.webrtc.RTCStatsReport;
 import org.webrtc.RtpReceiver;
 import org.webrtc.RtpTransceiver;
 import org.webrtc.SdpObserver;
@@ -51,9 +49,13 @@ public class FancyRTCPeerConnection {
     private FancyOnDataChannelListener onDataChannelListener;
     private FancyOnAddStreamListener onAddStreamListener;
     private FancyOnRemoveStreamListener onRemoveStreamListener;
-
+    private FancyOnIceConnectionChangeListener onIceConnectionChangeListener;
 
     static {
+        initFactory();
+    }
+
+    private static void initFactory() {
         executor.execute(() -> {
             PeerConnectionFactory.Builder builder = PeerConnectionFactory.builder();
             PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
@@ -67,7 +69,6 @@ public class FancyRTCPeerConnection {
                 encoderFactory = new SoftwareVideoEncoderFactory();
                 decoderFactory = new SoftwareVideoDecoderFactory();
             }
-
             builder.setVideoDecoderFactory(decoderFactory);
             builder.setVideoEncoderFactory(encoderFactory);
             factory = builder.createPeerConnectionFactory();
@@ -75,105 +76,104 @@ public class FancyRTCPeerConnection {
     }
 
     private void init() {
-        executor.execute(() -> {
-            connection = factory.createPeerConnection(configuration.getConfiguration(), new PeerConnection.Observer() {
-                @Override
-                public void onSignalingChange(PeerConnection.SignalingState signalingState) {
-                    if (onSignalingStateChangeListener != null) {
-                        onSignalingStateChangeListener.onSignalingStateChange();
+        executor.execute(() -> connection = factory.createPeerConnection(configuration.getConfiguration(), new PeerConnection.Observer() {
+            @Override
+            public void onConnectionChange(PeerConnection.PeerConnectionState newState) {
+                if (onConnectionStateChangeListener != null) {
+                    onConnectionStateChangeListener.onChange();
+                }
+            }
+
+            @Override
+            public void onSignalingChange(PeerConnection.SignalingState signalingState) {
+                if (onSignalingStateChangeListener != null) {
+                    onSignalingStateChangeListener.onSignalingStateChange();
+                }
+            }
+
+            @Override
+            public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
+                if (onIceConnectionChangeListener != null) {
+                    onIceConnectionChangeListener.onChange();
+                }
+            }
+
+            @Override
+            public void onIceConnectionReceivingChange(boolean b) {
+            }
+
+            @Override
+            public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
+                if (onIceGatheringStateChangeListener != null) {
+                    onIceGatheringStateChangeListener.onIceGatheringStateChange();
+                }
+            }
+
+            @Override
+            public void onIceCandidate(IceCandidate iceCandidate) {
+                if (onIceCandidateListener != null) {
+                    onIceCandidateListener.onIceCandidate(new FancyRTCIceCandidate(iceCandidate));
+                }
+            }
+
+            @Override
+            public void onIceCandidatesRemoved(IceCandidate[] iceCandidates) {
+
+            }
+
+            @Override
+            public void onAddStream(MediaStream mediaStream) {
+                if (onAddStreamListener != null) {
+                    onAddStreamListener.onAddStream(new FancyRTCMediaStream(mediaStream));
+                }
+            }
+
+            @Override
+            public void onRemoveStream(MediaStream mediaStream) {
+                if (onRemoveStreamListener != null) {
+                    onRemoveStreamListener.onRemoveStream(new FancyRTCMediaStream(mediaStream));
+                }
+            }
+
+            @Override
+            public void onDataChannel(DataChannel dataChannel) {
+                if (onDataChannelListener != null) {
+                    onDataChannelListener.onDataChannel(new FancyRTCDataChannelEvent(new FancyRTCDataChannel(dataChannel)));
+                }
+            }
+
+            @Override
+            public void onRenegotiationNeeded() {
+                if (onNegotiationNeededListener != null) {
+                    onNegotiationNeededListener.onNegotiationNeeded();
+                }
+            }
+
+            @Override
+            public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
+                if (onTrackListener != null) {
+                    List<FancyRTCMediaStream> list = new ArrayList<>();
+                    for (MediaStream stream : mediaStreams) {
+                        list.add(new FancyRTCMediaStream(stream));
                     }
-                }
 
-                @Override
-                public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
-                    if (onConnectionStateChangeListener != null) {
-                        onConnectionStateChangeListener.onChange();
-                    }
-                }
-
-                @Override
-                public void onIceConnectionReceivingChange(boolean b) {
-                }
-
-                @Override
-                public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
-                    if (onIceGatheringStateChangeListener != null) {
-                        onIceGatheringStateChangeListener.onIceGatheringStateChange();
-                    }
-                }
-
-                @Override
-                public void onIceCandidate(IceCandidate iceCandidate) {
-                    if (onIceCandidateListener != null) {
-                        onIceCandidateListener.onIceCandidate(new FancyRTCIceCandidate(iceCandidate));
-                    }
-                }
-
-                @Override
-                public void onIceCandidatesRemoved(IceCandidate[] iceCandidates) {
-
-                }
-
-                @Override
-                public void onAddStream(MediaStream mediaStream) {
-                    if (onAddStreamListener != null) {
-                        onAddStreamListener.onAddStream(new FancyRTCMediaStream(mediaStream));
-                    }
-                }
-
-                @Override
-                public void onRemoveStream(MediaStream mediaStream) {
-                    if (onRemoveStreamListener != null) {
-                        onRemoveStreamListener.onRemoveStream(new FancyRTCMediaStream(mediaStream));
-                    }
-                }
-
-                @Override
-                public void onDataChannel(DataChannel dataChannel) {
-                    if (onDataChannelListener != null) {
-                        onDataChannelListener.onDataChannel(new FancyRTCDataChannelEvent(new FancyRTCDataChannel(dataChannel)));
-                    }
-                }
-
-                @Override
-                public void onRenegotiationNeeded() {
-                    if (onNegotiationNeededListener != null) {
-                        onNegotiationNeededListener.onNegotiationNeeded();
-                    }
-                }
-
-                @Override
-                public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
-                    if (onTrackListener != null) {
-                        List<FancyRTCMediaStream> list = new ArrayList<>();
-                        for (MediaStream stream : mediaStreams) {
-                            list.add(new FancyRTCMediaStream(stream));
+                    /*
+                    RtpTransceiver rtpTransceiver = null;
+                    for (RtpTransceiver transceiver : connection.getTransceivers()) {
+                        if (transceiver.getReceiver() == rtpReceiver) {
+                            rtpTransceiver = transceiver;
                         }
-
-                        /*
-                        RtpTransceiver rtpTransceiver = null;
-                        for (RtpTransceiver transceiver : connection.getTransceivers()) {
-                            if (transceiver.getReceiver() == rtpReceiver) {
-                                rtpTransceiver = transceiver;
-                            }
-                        }
-                        */
-                        onTrackListener.onTrack(new FancyRTCTrackEvent(new FancyRTCRtpReceiver(rtpReceiver), list, new FancyRTCMediaStreamTrack(rtpReceiver.track()), null));
                     }
+                    */
+                    onTrackListener.onTrack(new FancyRTCTrackEvent(new FancyRTCRtpReceiver(rtpReceiver), list, new FancyRTCMediaStreamTrack(rtpReceiver.track()), null));
                 }
+            }
 
-                @Override
-                public void onTrack(RtpTransceiver rtpTransceiver) {
+            @Override
+            public void onTrack(RtpTransceiver rtpTransceiver) {
 
-                }
-            });
-            connection.getStats(new RTCStatsCollectorCallback() {
-                @Override
-                public void onStatsDelivered(RTCStatsReport rtcStatsReport) {
-
-                }
-            });
-        });
+            }
+        }));
     }
 
     public FancyRTCPeerConnection(Context context) {
@@ -222,6 +222,14 @@ public class FancyRTCPeerConnection {
             }
         }
         return FancyRTCPeerConnectionState.NEW;
+    }
+
+    public static interface FancyOnIceConnectionChangeListener {
+        public void onChange();
+    }
+
+    public void setOnIceConnectionChange(FancyOnIceConnectionChangeListener listener) {
+        onIceConnectionChangeListener = listener;
     }
 
     public static interface FancyOnConnectionStateChangeListener {
@@ -320,9 +328,11 @@ public class FancyRTCPeerConnection {
     }
 
     public void addIceCandidate(FancyRTCIceCandidate candidate) {
-        if (connection != null) {
-            executor.execute(() -> connection.addIceCandidate(candidate.getIceCandidate()));
-        }
+        executor.execute(() -> {
+            if (connection != null) {
+                connection.addIceCandidate(candidate.getIceCandidate());
+            }
+        });
     }
 
     public void addTrack(FancyRTCMediaStreamTrack track, List<String> streamIds) {
@@ -332,9 +342,11 @@ public class FancyRTCPeerConnection {
     }
 
     public void close() {
-        if (connection != null) {
-            executor.execute(() -> connection.close());
-        }
+        executor.execute(() -> {
+            if (connection != null) {
+                connection.close();
+            }
+        });
     }
 
     public static interface SdpCreateListener {
@@ -358,112 +370,140 @@ public class FancyRTCPeerConnection {
     }
 
     public void dispose() {
-        if (connection != null) {
-            executor.execute(() -> connection.dispose());
-        }
+        executor.execute(() -> {
+            if (connection != null) {
+                connection.dispose();
+            }
+        });
     }
 
     public void createAnswer(FancyRTCMediaConstraints mediaConstraints, SdpCreateListener listener) {
-        if (connection != null) {
-            executor.execute(() -> connection.createAnswer(new SdpObserver() {
-                @Override
-                public void onCreateSuccess(SessionDescription sessionDescription) {
-                    listener.onSuccess(FancyRTCSessionDescription.fromRTCSessionDescription(sessionDescription));
+        executor.execute(() -> {
+            if (connection != null) {
+
+                if (!mediaConstraints.mandatory.contains(new FancyRTCMediaConstraints.KeyValue("OfferToReceiveVideo", "true")) || !mediaConstraints.mandatory.contains(new FancyRTCMediaConstraints.KeyValue("OfferToReceiveVideo", "false"))) {
+                    mediaConstraints.mandatory.add(new FancyRTCMediaConstraints.KeyValue("OfferToReceiveVideo", "true"));
                 }
 
-                @Override
-                public void onSetSuccess() {
-
+                if (!mediaConstraints.mandatory.contains(new FancyRTCMediaConstraints.KeyValue("OfferToReceiveAudio", "true")) || !mediaConstraints.mandatory.contains(new FancyRTCMediaConstraints.KeyValue("OfferToReceiveAudio", "false"))) {
+                    mediaConstraints.mandatory.add(new FancyRTCMediaConstraints.KeyValue("OfferToReceiveAudio", "true"));
                 }
 
-                @Override
-                public void onCreateFailure(String s) {
-                    listener.onError(s);
-                }
+                connection.createAnswer(new SdpObserver() {
+                    @Override
+                    public void onCreateSuccess(SessionDescription sessionDescription) {
+                        listener.onSuccess(FancyRTCSessionDescription.fromRTCSessionDescription(sessionDescription));
+                    }
 
-                @Override
-                public void onSetFailure(String s) {
+                    @Override
+                    public void onSetSuccess() {
 
-                }
-            }, mediaConstraints.getMediaConstraints()));
-        }
+                    }
+
+                    @Override
+                    public void onCreateFailure(String s) {
+                        listener.onError(s);
+                    }
+
+                    @Override
+                    public void onSetFailure(String s) {
+
+                    }
+                }, mediaConstraints.getMediaConstraints());
+            }
+        });
     }
 
     public void createOffer(FancyRTCMediaConstraints mediaConstraints, SdpCreateListener listener) {
-        if (connection != null) {
-            executor.execute(() -> connection.createOffer(new SdpObserver() {
-                @Override
-                public void onCreateSuccess(SessionDescription sessionDescription) {
-                    listener.onSuccess(FancyRTCSessionDescription.fromRTCSessionDescription(sessionDescription));
+        executor.execute(() -> {
+            if (connection != null) {
+
+                if (!mediaConstraints.mandatory.contains(new FancyRTCMediaConstraints.KeyValue("OfferToReceiveVideo", "true")) || !mediaConstraints.mandatory.contains(new FancyRTCMediaConstraints.KeyValue("OfferToReceiveVideo", "false"))) {
+                    mediaConstraints.mandatory.add(new FancyRTCMediaConstraints.KeyValue("OfferToReceiveVideo", "true"));
                 }
 
-                @Override
-                public void onSetSuccess() {
-
+                if (!mediaConstraints.mandatory.contains(new FancyRTCMediaConstraints.KeyValue("OfferToReceiveAudio", "true")) || !mediaConstraints.mandatory.contains(new FancyRTCMediaConstraints.KeyValue("OfferToReceiveAudio", "false"))) {
+                    mediaConstraints.mandatory.add(new FancyRTCMediaConstraints.KeyValue("OfferToReceiveAudio", "true"));
                 }
 
-                @Override
-                public void onCreateFailure(String s) {
-                    listener.onError(s);
-                }
+                connection.createOffer(new SdpObserver() {
+                    @Override
+                    public void onCreateSuccess(SessionDescription sessionDescription) {
+                        listener.onSuccess(FancyRTCSessionDescription.fromRTCSessionDescription(sessionDescription));
+                    }
 
-                @Override
-                public void onSetFailure(String s) {
-                }
-            }, mediaConstraints.getMediaConstraints()));
-        }
+                    @Override
+                    public void onSetSuccess() {
+
+                    }
+
+                    @Override
+                    public void onCreateFailure(String s) {
+                        listener.onError(s);
+                    }
+
+                    @Override
+                    public void onSetFailure(String s) {
+                    }
+                }, mediaConstraints.getMediaConstraints());
+            }
+        });
     }
 
     public void setLocalDescription(FancyRTCSessionDescription sdp, SdpSetListener listener) {
-        if (connection != null) {
-            executor.execute(() -> connection.setLocalDescription(new SdpObserver() {
-                @Override
-                public void onCreateSuccess(SessionDescription sessionDescription) {
+        executor.execute(() -> {
+            if (connection != null) {
+                connection.setLocalDescription(new SdpObserver() {
+                    @Override
+                    public void onCreateSuccess(SessionDescription sessionDescription) {
 
-                }
+                    }
 
-                @Override
-                public void onSetSuccess() {
-                    listener.onSuccess();
-                }
+                    @Override
+                    public void onSetSuccess() {
+                        listener.onSuccess();
+                    }
 
-                @Override
-                public void onCreateFailure(String s) {
+                    @Override
+                    public void onCreateFailure(String s) {
 
-                }
+                    }
 
-                @Override
-                public void onSetFailure(String s) {
-                    listener.onError(s);
-                }
-            }, sdp.getSessionDescription()));
-        }
+                    @Override
+                    public void onSetFailure(String s) {
+                        listener.onError(s);
+                    }
+                }, sdp.getSessionDescription());
+            }
+        });
     }
 
     public void setRemoteDescription(FancyRTCSessionDescription sdp, SdpSetListener listener) {
-        if (connection != null) {
-            executor.execute(() -> connection.setRemoteDescription(new SdpObserver() {
-                @Override
-                public void onCreateSuccess(SessionDescription sessionDescription) {
+        executor.execute(() -> {
+            if (connection != null) {
+                connection.setRemoteDescription(new SdpObserver() {
+                    @Override
+                    public void onCreateSuccess(SessionDescription sessionDescription) {
 
-                }
+                    }
 
-                @Override
-                public void onSetSuccess() {
-                    listener.onSuccess();
-                }
+                    @Override
+                    public void onSetSuccess() {
+                        listener.onSuccess();
+                    }
 
-                @Override
-                public void onCreateFailure(String s) {
+                    @Override
+                    public void onCreateFailure(String s) {
 
-                }
+                    }
 
-                @Override
-                public void onSetFailure(String s) {
-                    listener.onError(s);
-                }
-            }, sdp.getSessionDescription()));
-        }
+                    @Override
+                    public void onSetFailure(String s) {
+                        listener.onError(s);
+                    }
+                }, sdp.getSessionDescription());
+            }
+        });
     }
 
     public PeerConnection getConnection() {
