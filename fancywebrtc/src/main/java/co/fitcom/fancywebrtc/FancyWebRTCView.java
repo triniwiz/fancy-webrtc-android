@@ -5,6 +5,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 
 import org.webrtc.MediaStream;
+import org.webrtc.MediaStreamTrack;
 import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoTrack;
 
@@ -12,7 +13,7 @@ import org.webrtc.VideoTrack;
  * Created by Osei Fortune on 8/15/18
  */
 public class FancyWebRTCView extends SurfaceViewRenderer {
-    private VideoTrack track;
+    private MediaStreamTrack track;
     private MediaStream mediaStream;
 
     public FancyWebRTCView(Context context, AttributeSet attrs) {
@@ -59,6 +60,35 @@ public class FancyWebRTCView extends SurfaceViewRenderer {
             }
             this.track = track;
             track.addSink(this);
+        }
+    }
+
+    public void setSrcObject(FancyRTCMediaStreamTrack track) {
+        MediaStreamTrack mediaStreamTrack = track.getMediaStreamTrack();
+        if (mediaStreamTrack != null) {
+            if (this.track != null) {
+                this.track.dispose();
+            }
+            try {
+                this.track = mediaStreamTrack;
+                VideoTrack videoTrack = (VideoTrack) mediaStreamTrack;
+                videoTrack.addSink(this);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void setSrcObject(MediaStreamTrack track) {
+        if (this.track != null) {
+            this.track.dispose();
+        }
+        try {
+            this.track = track;
+            VideoTrack videoTrack = (VideoTrack) track;
+            videoTrack.addSink(this);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
