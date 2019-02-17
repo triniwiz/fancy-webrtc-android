@@ -13,7 +13,7 @@ public class FancyRTCTrackEvent {
     private FancyRTCMediaStreamTrack mediaTrack;
     private FancyRTCRtpTransceiver transceiver;
 
-    FancyRTCTrackEvent(FancyRTCRtpReceiver receiver, List<FancyRTCMediaStream> streams, FancyRTCMediaStreamTrack mediaTrack, @Nullable FancyRTCRtpTransceiver transceiver) {
+    FancyRTCTrackEvent(FancyRTCRtpReceiver receiver, List<FancyRTCMediaStream> streams, @Nullable FancyRTCMediaStreamTrack mediaTrack, @Nullable FancyRTCRtpTransceiver transceiver) {
         this.receiver = receiver;
         this.streams = streams;
         this.mediaTrack = mediaTrack;

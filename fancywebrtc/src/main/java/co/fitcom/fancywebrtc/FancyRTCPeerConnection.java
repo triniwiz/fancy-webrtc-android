@@ -3,12 +3,14 @@ package co.fitcom.fancywebrtc;
 import android.content.Context;
 import android.util.Log;
 
+import org.webrtc.AudioTrack;
 import org.webrtc.DataChannel;
 import org.webrtc.DefaultVideoDecoderFactory;
 import org.webrtc.DefaultVideoEncoderFactory;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
+import org.webrtc.MediaStreamTrack;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.RtpReceiver;
@@ -19,6 +21,7 @@ import org.webrtc.SoftwareVideoDecoderFactory;
 import org.webrtc.SoftwareVideoEncoderFactory;
 import org.webrtc.VideoDecoderFactory;
 import org.webrtc.VideoEncoderFactory;
+import org.webrtc.VideoTrack;
 import org.webrtc.audio.AudioDeviceModule;
 import org.webrtc.audio.JavaAudioDeviceModule;
 import org.webrtc.audio.LegacyAudioDeviceModule;
@@ -152,26 +155,21 @@ public class FancyRTCPeerConnection {
             @Override
             public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
                 if (onTrackListener != null) {
-                    List<FancyRTCMediaStream> list = new ArrayList<>();
-                    for (MediaStream stream : mediaStreams) {
-                        list.add(new FancyRTCMediaStream(stream));
-                    }
-
-                    /*
-                    RtpTransceiver rtpTransceiver = null;
-                    for (RtpTransceiver transceiver : connection.getTransceivers()) {
-                        if (transceiver.getReceiver() == rtpReceiver) {
-                            rtpTransceiver = transceiver;
+                    if (configuration.getSdpSemantics() == FancyRTCSdpSemantics.PLAN_B) {
+                        List<FancyRTCMediaStream> list = new ArrayList<>();
+                        for (MediaStream stream : mediaStreams) {
+                            list.add(new FancyRTCMediaStream(stream));
                         }
+                        onTrackListener.onTrack(new FancyRTCTrackEvent(new FancyRTCRtpReceiver(rtpReceiver), list, new FancyRTCMediaStreamTrack(rtpReceiver.track()), null));
                     }
-                    */
-                    onTrackListener.onTrack(new FancyRTCTrackEvent(new FancyRTCRtpReceiver(rtpReceiver), list, new FancyRTCMediaStreamTrack(rtpReceiver.track()), null));
                 }
             }
 
             @Override
             public void onTrack(RtpTransceiver rtpTransceiver) {
-
+                if (onTrackListener != null) {
+                    onTrackListener.onTrack(new FancyRTCTrackEvent(new FancyRTCRtpReceiver(rtpTransceiver.getReceiver()), null, new FancyRTCMediaStreamTrack(rtpTransceiver.getReceiver().track()), new FancyRTCRtpTransceiver(rtpTransceiver)));
+                }
             }
         }));
     }
