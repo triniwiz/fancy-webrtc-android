@@ -27,7 +27,9 @@ import org.webrtc.audio.JavaAudioDeviceModule;
 import org.webrtc.audio.LegacyAudioDeviceModule;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -53,6 +55,8 @@ public class FancyRTCPeerConnection {
     private FancyOnAddStreamListener onAddStreamListener;
     private FancyOnRemoveStreamListener onRemoveStreamListener;
     private FancyOnIceConnectionChangeListener onIceConnectionChangeListener;
+    private Map<String, RtpReceiver> remoteReceivers = new HashMap<>();
+    private Map<String, RtpTransceiver> remoteTransceivers = new HashMap<>();
 
     static {
         initFactory();
@@ -154,21 +158,25 @@ public class FancyRTCPeerConnection {
 
             @Override
             public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
+                remoteReceivers.put(FancyUtils.getUUID(), rtpReceiver);
                 if (onTrackListener != null) {
                     if (configuration.getSdpSemantics() == FancyRTCSdpSemantics.PLAN_B) {
                         List<FancyRTCMediaStream> list = new ArrayList<>();
                         for (MediaStream stream : mediaStreams) {
                             list.add(new FancyRTCMediaStream(stream));
                         }
-                        onTrackListener.onTrack(new FancyRTCTrackEvent(new FancyRTCRtpReceiver(rtpReceiver), list, new FancyRTCMediaStreamTrack(rtpReceiver.track()), null));
+                        FancyRTCTrackEvent event = new FancyRTCTrackEvent(new FancyRTCRtpReceiver(rtpReceiver), list, new FancyRTCMediaStreamTrack(rtpReceiver.track()), null);
+                        onTrackListener.onTrack(event);
                     }
                 }
             }
 
             @Override
             public void onTrack(RtpTransceiver rtpTransceiver) {
+                remoteTransceivers.put(FancyUtils.getUUID(), rtpTransceiver);
                 if (onTrackListener != null) {
-                    onTrackListener.onTrack(new FancyRTCTrackEvent(new FancyRTCRtpReceiver(rtpTransceiver.getReceiver()), null, new FancyRTCMediaStreamTrack(rtpTransceiver.getReceiver().track()), new FancyRTCRtpTransceiver(rtpTransceiver)));
+                    FancyRTCTrackEvent event = new FancyRTCTrackEvent(new FancyRTCRtpReceiver(rtpTransceiver.getReceiver()), null, new FancyRTCMediaStreamTrack(rtpTransceiver.getReceiver().track()), new FancyRTCRtpTransceiver(rtpTransceiver));
+                    onTrackListener.onTrack(event);
                 }
             }
         }));
@@ -334,9 +342,11 @@ public class FancyRTCPeerConnection {
     }
 
     public void addTrack(FancyRTCMediaStreamTrack track, List<String> streamIds) {
-        if (connection != null) {
-            executor.execute(() -> connection.addTrack(track.getMediaStreamTrack(), streamIds));
-        }
+        executor.execute(() -> {
+            if (connection != null) {
+                connection.addTrack(track.getMediaStreamTrack(), streamIds);
+            }
+        });
     }
 
     public void close() {
