@@ -12,6 +12,13 @@ public class FancyRTCMediaStreamTrack {
         mediaStreamTrack = track;
     }
 
+
+    public static interface FancyRTCMediaStreamTrackListener {
+        public void onSuccess();
+
+        public void onError(String error);
+    }
+
     public String getId() {
         return mediaStreamTrack.id();
     }

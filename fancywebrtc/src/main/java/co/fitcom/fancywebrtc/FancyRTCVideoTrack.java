@@ -1,6 +1,8 @@
 package co.fitcom.fancywebrtc;
 
-import org.webrtc.MediaStreamTrack;
+import android.util.Log;
+
+import org.webrtc.CameraVideoCapturer;
 import org.webrtc.VideoTrack;
 
 /**
@@ -20,5 +22,33 @@ public class FancyRTCVideoTrack extends FancyRTCMediaStreamTrack {
 
     public VideoTrack getVideoTrack() {
         return videoTrack;
+    }
+
+    public void applyConstraints(FancyRTCMediaTrackConstraints constraints, FancyRTCMediaStreamTrackListener listener) {
+        if (constraints.getFacingMode() != null) {
+            String facingMode = constraints.getFacingMode();
+            boolean useFrontCamera = facingMode == null || !facingMode.equals("environment");
+            FancyRTCMediaDevices.FancyCapturer capturer = FancyRTCMediaDevices.videoTrackcapturerMap.get(videoTrack.id());
+            if (capturer != null) {
+                if (!capturer.getPosition().equals(constraints.getFacingMode())) {
+                    if (capturer.getCapturer() != null) {
+                        capturer.getCapturer().switchCamera(new CameraVideoCapturer.CameraSwitchHandler() {
+                            @Override
+                            public void onCameraSwitchDone(boolean b) {
+                                capturer.setPosition(useFrontCamera ? "user" : "environment");
+                                FancyRTCMediaDevices.videoTrackcapturerMap.put(videoTrack.id(), capturer);
+                                listener.onSuccess();
+                            }
+
+                            @Override
+                            public void onCameraSwitchError(String s) {
+                                listener.onError(s);
+                            }
+                        });
+                    }
+                }
+
+            }
+        }
     }
 }

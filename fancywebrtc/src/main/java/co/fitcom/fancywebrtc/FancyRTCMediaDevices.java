@@ -32,7 +32,8 @@ public class FancyRTCMediaDevices {
     private static final int DEFAULT_HEIGHT = 480;
     private static final int DEFAULT_WIDTH = 640;
     private static final int DEFAULT_FPS = 15;
-    private static Map<String, CameraVideoCapturer> capturerMap = new HashMap<>();
+    static Map<String, CameraVideoCapturer> capturerMap = new HashMap<>();
+    static Map<String, FancyCapturer> videoTrackcapturerMap = new HashMap<>();
 
     public static interface GetUserMediaListener {
         public void onSuccess(FancyRTCMediaStream mediaStream);
@@ -40,6 +41,27 @@ public class FancyRTCMediaDevices {
         public void onError(String error);
     }
 
+    static class FancyCapturer {
+        private CameraVideoCapturer capturer;
+        private String position;
+
+        FancyCapturer(CameraVideoCapturer capturer, String position) {
+            this.capturer = capturer;
+            this.position = position;
+        }
+
+        public CameraVideoCapturer getCapturer() {
+            return capturer;
+        }
+
+        public String getPosition() {
+            return position;
+        }
+
+        public void setPosition(String position) {
+            this.position = position;
+        }
+    }
 
     public static void getUserMedia(Context context, FancyRTCMediaStreamConstraints constraints, GetUserMediaListener listener) {
         FancyRTCPeerConnection.executor.execute(() -> {
@@ -48,9 +70,9 @@ public class FancyRTCMediaDevices {
             MediaStream localStream = FancyRTCPeerConnection.factory.createLocalMediaStream(streamId);
 
             VideoSource videoSource = null;
+            String videoTrackId = FancyUtils.getUUID();
             if (constraints.isVideoEnabled) {
                 videoSource = factory.createVideoSource(false);
-                String videoTrackId = FancyUtils.getUUID();
                 VideoTrack videoTrack = factory.createVideoTrack(videoTrackId, videoSource);
                 localStream.addTrack(videoTrack);
             }
@@ -180,9 +202,8 @@ public class FancyRTCMediaDevices {
 
                 }
             });
-
             capturerMap.put(capturer.toString(), capturer);
-
+            videoTrackcapturerMap.put(videoTrackId, new FancyCapturer(capturer, useFrontCamera ? "user" : "environment"));
             int w; // Final width
             int h; // Final height
             int f = frameRate; // Final Frames per second

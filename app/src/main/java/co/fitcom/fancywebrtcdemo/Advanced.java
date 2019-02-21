@@ -28,6 +28,8 @@ import co.fitcom.fancywebrtc.FancyRTCMediaStreamConstraints;
 import co.fitcom.fancywebrtc.FancyRTCConfiguration;
 import co.fitcom.fancywebrtc.FancyRTCDataChannelInit;
 import co.fitcom.fancywebrtc.FancyRTCIceCandidate;
+import co.fitcom.fancywebrtc.FancyRTCMediaStreamTrack;
+import co.fitcom.fancywebrtc.FancyRTCMediaTrackConstraints;
 import co.fitcom.fancywebrtc.FancyRTCPeerConnection;
 import co.fitcom.fancywebrtc.FancyRTCSdpType;
 import co.fitcom.fancywebrtc.FancyRTCSessionDescription;
@@ -45,6 +47,7 @@ public class Advanced extends AppCompatActivity {
     Socket socket;
     String me;
     FancyRTCMediaStream localStream;
+    String currentCameraPosition;
     private final Map<String, FancyRTCDataChannel> dataChannels = new HashMap<>();
     private ArrayList<FancyRTCIceCandidate> remoteIceCandidates;
     static String TAG = FancyWebRTC.Tag;
@@ -216,6 +219,7 @@ public class Advanced extends AppCompatActivity {
         video.put("facingMode", "user");
         video.put("width", 960);
         video.put("height", 720);
+        currentCameraPosition = "user";
         FancyRTCMediaStreamConstraints constraints = new FancyRTCMediaStreamConstraints(true, video);
         FancyRTCMediaDevices.getUserMedia(this, constraints, new FancyRTCMediaDevices.GetUserMediaListener() {
             @Override
@@ -229,6 +233,32 @@ public class Advanced extends AppCompatActivity {
 
             }
         });
+    }
+
+    public void switchCamera(View view) {
+        if (localStream != null) {
+            for (FancyRTCVideoTrack track : localStream.getVideoTracks()) {
+                FancyRTCMediaTrackConstraints constraints = new FancyRTCMediaTrackConstraints(null);
+                String nextPosition = currentCameraPosition.equals("user") ? "environment" : "user";
+                constraints.setFacingMode(nextPosition);
+                track.applyConstraints(constraints, new FancyRTCMediaStreamTrack.FancyRTCMediaStreamTrackListener() {
+                    @Override
+                    public void onSuccess() {
+                        if (nextPosition.equals("environment")) {
+                            localView.setMirror(false);
+                        } else {
+                            localView.setMirror(true);
+                        }
+                        currentCameraPosition = nextPosition;
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.d(TAG, "error " + error);
+                    }
+                });
+            }
+        }
     }
 
     public void makeCall(View view) {

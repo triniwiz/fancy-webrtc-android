@@ -24,4 +24,8 @@ public class FancyRTCAudioTrack extends FancyRTCMediaStreamTrack {
     public AudioTrack getAudioTrack() {
         return audioTrack;
     }
+
+    public void applyConstraints(FancyRTCMediaTrackConstraints constraints, FancyRTCMediaStreamTrackListener listener) {
+        listener.onSuccess();
+    }
 }
