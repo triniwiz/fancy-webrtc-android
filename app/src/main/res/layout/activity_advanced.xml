@@ -97,4 +97,13 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.601" />
 
+    <Button
+        android:id="@+id/button6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="shareScreen"
+        android:text="ShareScreen"
+        tools:layout_editor_absoluteX="145dp"
+        tools:layout_editor_absoluteY="317dp" />
+
 </android.support.constraint.ConstraintLayout>

@@ -1,6 +1,8 @@
 package co.fitcom.fancywebrtcdemo;
 
+import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import co.fitcom.fancywebrtc.FancyRTCApplicationHelper;
 import co.fitcom.fancywebrtc.FancyRTCAudioTrack;
 import co.fitcom.fancywebrtc.FancyRTCDataChannel;
 
@@ -288,6 +291,22 @@ public class Advanced extends AppCompatActivity {
         }
     }
 
+    public void shareScreen(View view) {
+        FancyRTCMediaDevices.getDisplayMedia(this, new FancyRTCMediaStreamConstraints(true, true), new FancyRTCMediaDevices.GetUserMediaListener() {
+            @Override
+            public void onSuccess(FancyRTCMediaStream mediaStream) {
+                localStream = mediaStream;
+                localView.setSrcObject(mediaStream);
+                localView.setMirror(false);
+            }
+
+            @Override
+            public void onError(String error) {
+
+            }
+        });
+    }
+
     public void answerCall(View view) {
     }
 
@@ -414,6 +433,12 @@ public class Advanced extends AppCompatActivity {
 
     void didReceiveError(String error) {
         Log.e(TAG, error);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        FancyRTCApplicationHelper.getInstance().handleResult(requestCode, resultCode, data);
     }
 
     @Override
