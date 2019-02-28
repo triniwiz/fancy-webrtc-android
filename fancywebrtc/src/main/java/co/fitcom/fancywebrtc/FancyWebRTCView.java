@@ -22,17 +22,17 @@ public class FancyWebRTCView extends SurfaceViewRenderer {
     }
 
     public static enum Scaling {
-        fit,
-        fill,
-        none
+        FIT,
+        FILL,
+        NONE
     }
 
     public void setScaling(Scaling scaling) {
         switch (scaling) {
-            case fit:
+            case FIT:
                 setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
                 break;
-            case fill:
+            case FILL:
                 setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
                 break;
             default:
