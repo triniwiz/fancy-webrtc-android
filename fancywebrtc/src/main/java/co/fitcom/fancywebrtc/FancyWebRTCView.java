@@ -5,6 +5,7 @@ import android.util.AttributeSet;
 
 import org.webrtc.MediaStream;
 import org.webrtc.MediaStreamTrack;
+import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoTrack;
 
@@ -17,8 +18,27 @@ public class FancyWebRTCView extends SurfaceViewRenderer {
 
     public FancyWebRTCView(Context context, AttributeSet attrs) {
         super(context, attrs);
-
         initialize();
+    }
+
+    public static enum Scaling {
+        fit,
+        fill,
+        none
+    }
+
+    public void setScaling(Scaling scaling) {
+        switch (scaling) {
+            case fit:
+                setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
+                break;
+            case fill:
+                setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
+                break;
+            default:
+                setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_BALANCED);
+                break;
+        }
     }
 
     private void initialize() {
@@ -42,7 +62,7 @@ public class FancyWebRTCView extends SurfaceViewRenderer {
     public void setSrcObject(FancyRTCMediaStream stream) {
         mediaStream = stream.getStream();
         if (mediaStream.videoTracks.size() > 0) {
-            VideoTrack track =  mediaStream.videoTracks.get(0);
+            VideoTrack track = mediaStream.videoTracks.get(0);
             if (this.track != null) {
                 ((VideoTrack) this.track).removeSink(this);
             }
