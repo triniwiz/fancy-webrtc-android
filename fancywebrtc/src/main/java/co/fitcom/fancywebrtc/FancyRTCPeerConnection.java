@@ -70,12 +70,13 @@ public class FancyRTCPeerConnection {
             VideoEncoderFactory encoderFactory;
             VideoDecoderFactory decoderFactory;
             if (FancyWebRTCEglUtils.getRootEglBaseContext() != null) {
-                encoderFactory = new DefaultVideoEncoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext(), true, false);
+                encoderFactory = new DefaultVideoEncoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext(), true, true);
                 decoderFactory = new DefaultVideoDecoderFactory(FancyWebRTCEglUtils.getRootEglBaseContext());
             } else {
                 encoderFactory = new SoftwareVideoEncoderFactory();
                 decoderFactory = new SoftwareVideoDecoderFactory();
             }
+
             builder.setVideoDecoderFactory(decoderFactory);
             builder.setVideoEncoderFactory(encoderFactory);
             factory = builder.createPeerConnectionFactory();
