@@ -69,6 +69,13 @@ public class FancyRTCMediaDevices {
         }
     }
 
+    public static void stopCapturers() {
+        for (FancyCapturer entry : videoTrackcapturerMap.values()) {
+            entry.getCapturer().dispose();
+        }
+        videoTrackcapturerMap.clear();
+    }
+
     public static void getUserMedia(Context context, FancyRTCMediaStreamConstraints constraints, GetUserMediaListener listener) {
         FancyRTCPeerConnection.executor.execute(() -> {
             String streamId = FancyUtils.getUUID();
