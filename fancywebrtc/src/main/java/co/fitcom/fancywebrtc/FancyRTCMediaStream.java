@@ -47,7 +47,16 @@ public class FancyRTCMediaStream {
         return fancyAudioTracks;
     }
 
-
+    public List<FancyRTCMediaStreamTrack> getTracks(){
+        List<FancyRTCMediaStreamTrack> tracks = new ArrayList<>();
+        for(AudioTrack track: stream.audioTracks){
+            tracks.add(new FancyRTCMediaStreamTrack(track));
+        }
+        for (VideoTrack track: stream.videoTracks){
+            tracks.add(new FancyRTCMediaStreamTrack(track));
+        }
+        return tracks;
+    }
     public void addTrack(FancyRTCVideoTrack track) {
         stream.addTrack(track.videoTrack);
     }

@@ -50,6 +50,10 @@ public class FancyRTCMediaDevices {
     static class FancyCapturer {
         private CameraVideoCapturer capturer;
         private String position;
+        private int width;
+        private int height;
+        private int frameRate;
+        private int aspectRatio;
 
         FancyCapturer(CameraVideoCapturer capturer, String position) {
             this.capturer = capturer;
@@ -66,6 +70,38 @@ public class FancyRTCMediaDevices {
 
         public void setPosition(String position) {
             this.position = position;
+        }
+
+        public void setWidth(int width) {
+            this.width = width;
+        }
+
+        public int getWidth() {
+            return width;
+        }
+
+        public void setHeight(int height) {
+            this.height = height;
+        }
+
+        public int getHeight() {
+            return height;
+        }
+
+        public void setAspectRatio(int aspectRatio) {
+            this.aspectRatio = aspectRatio;
+        }
+
+        public int getAspectRatio() {
+            return aspectRatio;
+        }
+
+        public void setFrameRate(int frameRate) {
+            this.frameRate = frameRate;
+        }
+
+        public int getFrameRate() {
+            return frameRate;
         }
     }
 
@@ -222,7 +258,8 @@ public class FancyRTCMediaDevices {
                 }
             });
             capturerMap.put(capturer.toString(), capturer);
-            videoTrackcapturerMap.put(videoTrackId, new FancyCapturer(capturer, useFrontCamera ? "user" : "environment"));
+            FancyCapturer fancyCapturer = new FancyCapturer(capturer, useFrontCamera ? "user" : "environment");
+            videoTrackcapturerMap.put(videoTrackId, fancyCapturer);
             int w; // Final width
             int h; // Final height
             int f = frameRate; // Final Frames per second
@@ -277,6 +314,10 @@ public class FancyRTCMediaDevices {
             capturer.startCapture(closestSize.width, closestSize.height, closestFrameRate.max);
             //videoSource.adaptOutputFormat(w, h, f);
             FancyRTCMediaStream fancyMediaStream = new FancyRTCMediaStream(localStream);
+            fancyCapturer.setWidth(w);
+            fancyCapturer.setHeight(h);
+            fancyCapturer.setFrameRate(closestFrameRate.max);
+            fancyCapturer.setAspectRatio(w/h);
             listener.onSuccess(fancyMediaStream);
         });
     }

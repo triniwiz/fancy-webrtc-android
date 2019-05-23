@@ -7,16 +7,21 @@ import org.webrtc.MediaStreamTrack;
  */
 public class FancyRTCMediaStreamTrack {
     private MediaStreamTrack mediaStreamTrack;
+    private FancyRTCMediaTrackSettings mediaTrackSettings;
 
     public FancyRTCMediaStreamTrack(MediaStreamTrack track) {
         mediaStreamTrack = track;
+        mediaTrackSettings = new FancyRTCMediaTrackSettings(track.id(), track.kind());
     }
-
 
     public static interface FancyRTCMediaStreamTrackListener {
         public void onSuccess();
 
         public void onError(String error);
+    }
+
+    public FancyRTCMediaTrackSettings getSettings() {
+        return mediaTrackSettings;
     }
 
     public String getId() {

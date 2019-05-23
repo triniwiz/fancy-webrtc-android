@@ -13,6 +13,10 @@ public class FancyRTCAudioTrack extends FancyRTCMediaStreamTrack {
         audioTrack = track;
     }
 
+    public void stop() {
+        audioTrack.setEnabled(false);
+    }
+
     public void setEnabled(boolean enabled) {
         audioTrack.setEnabled(enabled);
     }

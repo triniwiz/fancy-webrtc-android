@@ -10,10 +10,19 @@ import org.webrtc.VideoTrack;
  */
 public class FancyRTCVideoTrack extends FancyRTCMediaStreamTrack {
     VideoTrack videoTrack;
-
+    FancyRTCMediaTrackSettings settings;
     public FancyRTCVideoTrack(VideoTrack track) {
         super(track);
         this.videoTrack = track;
+        settings = new FancyRTCMediaTrackSettings(videoTrack.id(), "video");
+    }
+
+    public void stop() {
+        videoTrack.setEnabled(false);
+    }
+
+    public FancyRTCMediaTrackSettings getSettings(){
+        return settings;
     }
 
     public void setEnabled(boolean enabled) {

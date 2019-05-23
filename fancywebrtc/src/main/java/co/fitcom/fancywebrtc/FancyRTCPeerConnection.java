@@ -14,6 +14,7 @@ import org.webrtc.MediaStreamTrack;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.RtpReceiver;
+import org.webrtc.RtpSender;
 import org.webrtc.RtpTransceiver;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
@@ -24,7 +25,6 @@ import org.webrtc.VideoEncoderFactory;
 import org.webrtc.VideoTrack;
 import org.webrtc.audio.AudioDeviceModule;
 import org.webrtc.audio.JavaAudioDeviceModule;
-import org.webrtc.audio.LegacyAudioDeviceModule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -519,9 +519,12 @@ public class FancyRTCPeerConnection {
         return connection;
     }
 
-
-    AudioDeviceModule createLegacyAudioDevice() {
-        return new LegacyAudioDeviceModule();
+    public List<FancyRTCRtpSender> getSenders() {
+        List<FancyRTCRtpSender> senders = new ArrayList<>();
+        for (RtpSender sender : connection.getSenders()) {
+            senders.add(new FancyRTCRtpSender(sender));
+        }
+        return senders;
     }
 
     AudioDeviceModule createJavaAudioDevice() {
