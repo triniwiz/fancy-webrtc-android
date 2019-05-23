@@ -75,14 +75,6 @@ public class FancyRTCMediaDevices {
             PeerConnectionFactory factory = FancyRTCPeerConnection.factory;
             MediaStream localStream = FancyRTCPeerConnection.factory.createLocalMediaStream(streamId);
 
-            VideoSource videoSource = null;
-            String videoTrackId = FancyUtils.getUUID();
-            if (constraints.isVideoEnabled) {
-                videoSource = factory.createVideoSource(false);
-                VideoTrack videoTrack = factory.createVideoTrack(videoTrackId, videoSource);
-                localStream.addTrack(videoTrack);
-            }
-
             if (constraints.isAudioEnabled) {
                 MediaConstraints audioConstraints = new MediaConstraints();
                 audioConstraints.optional.add(
@@ -104,6 +96,20 @@ public class FancyRTCMediaDevices {
                     audioTrack.setVolume(volume);
                 }
                 localStream.addTrack(audioTrack);
+            }
+
+            if (!constraints.isVideoEnabled) {
+                FancyRTCMediaStream fancyMediaStream = new FancyRTCMediaStream(localStream);
+                listener.onSuccess(fancyMediaStream);
+                return;
+            }
+
+            VideoSource videoSource = null;
+            String videoTrackId = FancyUtils.getUUID();
+            if (constraints.isVideoEnabled) {
+                videoSource = factory.createVideoSource(false);
+                VideoTrack videoTrack = factory.createVideoTrack(videoTrackId, videoSource);
+                localStream.addTrack(videoTrack);
             }
 
             CameraEnumerator enumerator;
