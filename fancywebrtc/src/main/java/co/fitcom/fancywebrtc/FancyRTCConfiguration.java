@@ -19,22 +19,7 @@ public class FancyRTCConfiguration {
     private PeerConnection.RTCConfiguration configuration;
 
     public FancyRTCConfiguration() {
-        iceServers = new ArrayList<>();
-        String[] defaultIceServers = new String[]{
-                "stun:stun.l.google.com:19302",
-                "stun:stun1.l.google.com:19302",
-                "stun:stun2.l.google.com:19302",
-                "stun:stun3.l.google.com:19302",
-                "stun:stun4.l.google.com:19302"
-        };
-        for (String server : defaultIceServers) {
-            iceServers.add(new FancyRTCIceServer(server));
-        }
-        List<PeerConnection.IceServer> list = new ArrayList<>();
-        for (FancyRTCIceServer server : iceServers) {
-            list.add(server.toWebRtc());
-        }
-        configuration = new PeerConnection.RTCConfiguration(list);
+        configuration = new PeerConnection.RTCConfiguration(null);
 
        // configuration.enableDtlsSrtp = true;
        // configuration.enableRtpDataChannel = true;
@@ -49,7 +34,6 @@ public class FancyRTCConfiguration {
     @SuppressWarnings("unchecked")
     public FancyRTCConfiguration(Map<String, Object> options) {
         configuration = new PeerConnection.RTCConfiguration(null);
-
         for (String key : options.keySet()) {
             Object value = options.get(key);
             switch (key) {

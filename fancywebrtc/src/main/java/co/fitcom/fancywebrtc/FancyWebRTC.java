@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
+
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+
 import android.util.Base64;
 
 import org.webrtc.AudioSource;
@@ -60,7 +62,6 @@ public class FancyWebRTC {
     private Map<String, MediaStream> remoteMediaStreams;
     private MediaConstraints defaultConstraints;
     private ArrayList<IceCandidate> remoteIceCandidates;
-    private ArrayList<PeerConnection.IceServer> remoteIceServers;
     private FancyWebRTCListener listener;
     private WeakReference<FancyWebRTC> ref;
     private boolean videoEnabled = true;
@@ -68,19 +69,13 @@ public class FancyWebRTC {
     public static String[] WEBRTC_PERMISSIONS = new String[]{android.Manifest.permission.CAMERA, android.Manifest.permission.RECORD_AUDIO};
     public static int WEBRTC_PERMISSIONS_REQUEST_CODE = 12345;
     private PeerConnection.RTCConfiguration configuration;
-    private String[] defaultIceServers = new String[]{
-            "stun:stun.l.google.com:19302",
-            "stun:stun1.l.google.com:19302",
-            "stun:stun2.l.google.com:19302",
-            "stun:stun3.l.google.com:19302",
-            "stun:stun4.l.google.com:19302"
-    };
     static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Map<String, MediaData> tracks = new HashMap<>();
     private final Map<String, DataChannel> dataChannels = new HashMap<>();
     private final Map<String, FancyWebRTCListener.GetUserMediaListener> getUserMediaListenerMap = new HashMap<>();
     private final Context appContext;
     public static String Tag = "co.fitcom.fancywebrtc.logger";
+
     class MediaData {
         public final MediaSource mediaSource;
         public final MediaStreamTrack track;
@@ -94,18 +89,14 @@ public class FancyWebRTC {
     }
 
     public static void init(Context context) {
-       executor.execute(() -> {
-           FancyWebRTCEglUtils.getRootEglBase();
-           PeerConnectionFactory.InitializationOptions.Builder builder = PeerConnectionFactory.InitializationOptions.builder(context);
-           builder.setEnableInternalTracer(true);
-           PeerConnectionFactory.initialize(builder.createInitializationOptions());
-       });
+        executor.execute(() -> {
+            FancyWebRTCEglUtils.getRootEglBase();
+            PeerConnectionFactory.InitializationOptions.Builder builder = PeerConnectionFactory.InitializationOptions.builder(context);
+            builder.setEnableInternalTracer(true);
+            PeerConnectionFactory.initialize(builder.createInitializationOptions());
+        });
     }
 
-    public FancyWebRTC(Context context, boolean videoEnabled, boolean audioEnabled) {
-        initialize(videoEnabled, audioEnabled, null);
-        this.appContext = context;
-    }
 
     public FancyWebRTC(Context context, boolean videoEnabled, boolean audioEnabled, ArrayList<PeerConnection.IceServer> iceServers) {
         initialize(videoEnabled, audioEnabled, iceServers);
@@ -122,10 +113,7 @@ public class FancyWebRTC {
                 PeerConnectionFactory.Builder builder = PeerConnectionFactory.builder();
                 PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
                 builder.setOptions(options);
-
                 factory = builder.createPeerConnectionFactory();
-
-
                 remoteIceCandidates = new ArrayList<>();
                 localMediaStreams = new HashMap<>();
                 remoteMediaStreams = new HashMap<>();
@@ -142,15 +130,7 @@ public class FancyWebRTC {
                         )
                 );
 
-                if (iceServers == null) {
-                    ArrayList<PeerConnection.IceServer> defaultIceServersList = new ArrayList<>();
-                    for (String url : defaultIceServers) {
-                        defaultIceServersList.add(PeerConnection.IceServer.builder(url).createIceServer());
-                    }
-                    configuration = new PeerConnection.RTCConfiguration(defaultIceServersList);
-                } else {
-                    configuration = new PeerConnection.RTCConfiguration(iceServers);
-                }
+                configuration = new PeerConnection.RTCConfiguration(iceServers);
 
                 VideoEncoderFactory encoderFactory;
                 VideoDecoderFactory decoderFactory;
@@ -414,7 +394,7 @@ public class FancyWebRTC {
             @Override
             public void run() {
                 if (connection == null) return;
-                for(MediaStream stream: localMediaStreams.values()){
+                for (MediaStream stream : localMediaStreams.values()) {
                     stream.dispose();
                 }
                 connection.close();
@@ -511,7 +491,7 @@ public class FancyWebRTC {
             @Override
             public void run() {
                 if (connection == null || remoteSdp == null) return;
-                if ( connection.getRemoteDescription() != null && (connection.getRemoteDescription().type == SessionDescription.Type.ANSWER && remoteSdp.type == SessionDescription.Type.ANSWER))
+                if (connection.getRemoteDescription() != null && (connection.getRemoteDescription().type == SessionDescription.Type.ANSWER && remoteSdp.type == SessionDescription.Type.ANSWER))
                     return;
                 connection.setRemoteDescription(new SdpObserver() {
                     @Override
@@ -633,7 +613,7 @@ public class FancyWebRTC {
     }
 
     public void getUserMedia(final Quality quality, final FancyWebRTCListener.GetUserMediaListener getUserMediaListener) {
-       final String streamId = randomId();
+        final String streamId = randomId();
         if (!FancyWebRTC.hasPermissions(appContext)) {
             boolean videoPermission = ContextCompat.checkSelfPermission(appContext, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
             boolean audioPermission = ContextCompat.checkSelfPermission(appContext, android.Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
@@ -837,7 +817,7 @@ public class FancyWebRTC {
     }
 
     public static void requestPermissions(Context context) {
-        android.support.v4.app.ActivityCompat.requestPermissions((Activity) context, WEBRTC_PERMISSIONS, WEBRTC_PERMISSIONS_REQUEST_CODE);
+        androidx.core.app.ActivityCompat.requestPermissions((Activity) context, WEBRTC_PERMISSIONS, WEBRTC_PERMISSIONS_REQUEST_CODE);
     }
 
     public enum Quality {

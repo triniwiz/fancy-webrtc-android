@@ -1,6 +1,6 @@
 package co.fitcom.fancywebrtc;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import org.webrtc.DtmfSender;
 

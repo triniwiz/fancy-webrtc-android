@@ -2,20 +2,13 @@ package co.fitcom.fancywebrtc;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 import org.webrtc.CameraEnumerationAndroid;
 import org.webrtc.CameraVideoCapturer;
-import org.webrtc.MediaStream;
 import org.webrtc.SurfaceTextureHelper;
-import org.webrtc.SurfaceViewRenderer;
-import org.webrtc.VideoCapturer;
-import org.webrtc.VideoFrame;
 import org.webrtc.VideoSource;
-import org.webrtc.VideoTrack;
-
-import java.lang.ref.WeakReference;
 
 /**
  * Created by Osei Fortune on 8/15/18

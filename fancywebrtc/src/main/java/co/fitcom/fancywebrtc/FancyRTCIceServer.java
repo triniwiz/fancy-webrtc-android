@@ -1,11 +1,9 @@
 package co.fitcom.fancywebrtc;
 
-import android.support.annotation.Nullable;
-import android.util.Log;
+import androidx.annotation.Nullable;
 
 import org.webrtc.PeerConnection;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
