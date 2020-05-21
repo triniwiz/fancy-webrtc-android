@@ -3,8 +3,8 @@ package co.fitcom.fancywebrtc;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.SparseArray;
 
 /**
@@ -49,12 +49,12 @@ public class FancyRTCApplicationHelper {
 
     public void requestPermission(Context context, String permission, int requestCode, Callback callback) {
         callbackSparseArray.append(requestCode, callback);
-        android.support.v4.app.ActivityCompat.requestPermissions((Activity) context, new String[]{permission}, requestCode);
+        androidx.core.app.ActivityCompat.requestPermissions((Activity) context, new String[]{permission}, requestCode);
     }
 
     public void requestPermissions(Context context, String[] permissions, int requestCode, Callback callback) {
         callbackSparseArray.append(requestCode, callback);
-        android.support.v4.app.ActivityCompat.requestPermissions((Activity) context, permissions, requestCode);
+        androidx.core.app.ActivityCompat.requestPermissions((Activity) context, permissions, requestCode);
     }
 
     public void onResult(int requestCode, Callback callback) {

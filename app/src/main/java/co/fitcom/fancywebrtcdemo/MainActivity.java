@@ -1,32 +1,22 @@
 package co.fitcom.fancywebrtcdemo;
 
 import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.webrtc.DataChannel;
-import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
-import org.webrtc.PeerConnection;
-import org.webrtc.SessionDescription;
 import org.webrtc.VideoTrack;
 
-import java.net.URISyntaxException;
 import java.util.UUID;
 
 import co.fitcom.fancywebrtc.FancyWebRTC;
 import co.fitcom.fancywebrtc.FancyWebRTCCapturer;
 import co.fitcom.fancywebrtc.FancyWebRTCListener;
 import co.fitcom.fancywebrtc.FancyWebRTCView;
-import io.socket.client.IO;
 import io.socket.client.Socket;
-import io.socket.emitter.Emitter;
 
 public class MainActivity extends AppCompatActivity {
     FancyWebRTCView localView;

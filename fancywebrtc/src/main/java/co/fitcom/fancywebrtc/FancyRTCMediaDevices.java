@@ -1,12 +1,18 @@
 package co.fitcom.fancywebrtc;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+
+import com.google.gson.Gson;
 
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
@@ -15,6 +21,7 @@ import org.webrtc.Camera2Enumerator;
 import org.webrtc.CameraEnumerationAndroid;
 import org.webrtc.CameraEnumerator;
 import org.webrtc.CameraVideoCapturer;
+import org.webrtc.CapturerObserver;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnectionFactory;
@@ -22,6 +29,9 @@ import org.webrtc.ScreenCapturerAndroid;
 import org.webrtc.Size;
 import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.VideoCapturer;
+import org.webrtc.VideoFrame;
+import org.webrtc.VideoProcessor;
+import org.webrtc.VideoSink;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 
@@ -110,6 +120,43 @@ public class FancyRTCMediaDevices {
             entry.getCapturer().dispose();
         }
         videoTrackcapturerMap.clear();
+    }
+
+    public static List<String> enumerateDevices(Context context) {
+        List<String> devices = new ArrayList<>();
+        Gson gson = new Gson();
+        if(ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED){
+            CameraEnumerator enumerator;
+            if (Camera2Enumerator.isSupported(context)) {
+                enumerator = new Camera2Enumerator(context);
+            } else {
+                enumerator = new Camera1Enumerator(false);
+            }
+            String[] deviceInfos = enumerator.getDeviceNames();
+            for (int i = 0; i < deviceInfos.length; i++) {
+                HashMap<String, String> device = new HashMap<>();
+                if (enumerator.isFrontFacing(deviceInfos[i])) {
+                    device.put("facing", "front");
+                } else {
+                    device.put("facing", "environment");
+                }
+
+                device.put("deviceId", "" + i);
+                device.put("groupId", "");
+                device.put("label", deviceInfos[i]);
+                device.put("kind", "videoinput");
+                devices.add(gson.toJson(device));
+            }
+        }
+
+
+        HashMap<String, String> audio = new HashMap<>();
+        audio.put("deviceId", "audio-1");
+        audio.put("groupId", "");
+        audio.put("label", "Audio");
+        audio.put("kind", "audioinput");
+        devices.add(gson.toJson(audio));
+        return devices;
     }
 
     public static void getUserMedia(Context context, FancyRTCMediaStreamConstraints constraints, GetUserMediaListener listener) {
@@ -317,7 +364,7 @@ public class FancyRTCMediaDevices {
             fancyCapturer.setWidth(w);
             fancyCapturer.setHeight(h);
             fancyCapturer.setFrameRate(closestFrameRate.max);
-            fancyCapturer.setAspectRatio(w/h);
+            fancyCapturer.setAspectRatio(w / h);
             listener.onSuccess(fancyMediaStream);
         });
     }
