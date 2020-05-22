@@ -19,8 +19,8 @@ public class FancyRTCConfiguration {
     private PeerConnection.RTCConfiguration configuration;
 
     public FancyRTCConfiguration() {
-        List<PeerConnection.IceServer> servers = new ArrayList();
-        configuration = new PeerConnection.RTCConfiguration(servers);
+    List<PeerConnection.IceServer> servers = new ArrayList();
+    configuration = new PeerConnection.RTCConfiguration(servers);
 
        // configuration.enableDtlsSrtp = true;
        // configuration.enableRtpDataChannel = true;
@@ -34,8 +34,8 @@ public class FancyRTCConfiguration {
 
     @SuppressWarnings("unchecked")
     public FancyRTCConfiguration(Map<String, Object> options) {
-        List<PeerConnection.IceServer> servers = new ArrayList();
-        configuration = new PeerConnection.RTCConfiguration(servers);
+    List<PeerConnection.IceServer> servers = new ArrayList();
+    configuration = new PeerConnection.RTCConfiguration(servers);
         for (String key : options.keySet()) {
             Object value = options.get(key);
             switch (key) {
